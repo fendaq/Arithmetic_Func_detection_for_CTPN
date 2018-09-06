@@ -104,11 +104,8 @@ if __name__ == '__main__':
         print('done')
     except:
         raise 'Check your pretrained {:s}'.format(ckpt.model_checkpoint_path)
-    print('111111111')
     im = 128 * np.ones((300, 300, 3), dtype=np.uint8)
-    # for i in range(2):
-    #     _, _ = test_ctpn(sess, net, im)
-    print('222222222')
+
     im_names = glob.glob(os.path.join(cfg.DATA_DIR, 'demo', '*.png')) + \
                glob.glob(os.path.join(cfg.DATA_DIR, 'demo', '*.jpg'))
 
