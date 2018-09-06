@@ -1,0 +1,18 @@
+# pycharm
+.idea
+*.xml
+
+# model
+checkpoints
+*.pb
+
+# image
+*.png
+*.jpg
+
+# txt result
+*.txt
+
+# 编译
+*.pyc
+__*
