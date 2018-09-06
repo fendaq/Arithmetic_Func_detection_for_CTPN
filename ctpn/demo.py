@@ -66,12 +66,19 @@ def ctpn(sess, net, image_name):
     timer.tic()
 
     img = cv2.imread(image_name)
-    print('111',img.shape)
+    print('111', img.shape)
     #　将图像进行resize并返回其缩放大小
     img, scale = resize_im(img, scale=TextLineCfg.SCALE, max_scale=TextLineCfg.MAX_SCALE)
     print('222', img.shape)
     # 送入网络得到1000个得分,1000个bbox
     scores, boxes = test_ctpn(sess, net, img)
+
+    # img_re = img
+    # for i in range(np.shape(boxes)[0]):
+    #     #print(np.shape(boxes))
+    #     cv2.rectangle(img_re, (boxes[i][0],boxes[i][1]),(boxes[i][2],boxes[i][3]),(255,0,0),1)
+    # cv2.imshow('333', img_re)
+    # cv2.waitKey()
 
     textdetector = TextDetector()
     boxes = textdetector.detect(boxes, scores[:, np.newaxis], img.shape[:2])

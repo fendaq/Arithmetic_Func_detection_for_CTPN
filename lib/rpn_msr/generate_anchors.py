@@ -2,6 +2,7 @@ import numpy as np
 
 def generate_basic_anchors(sizes, base_size=16):
     base_anchor = np.array([0, 0, base_size - 1, base_size - 1], np.int32)
+    # anchors shape =[10,4]
     anchors = np.zeros((len(sizes), 4), np.int32)
     index = 0
     for h, w in sizes:

@@ -55,11 +55,14 @@ def test_ctpn(sess, net, im, boxes=None):
     if cfg.TEST.HAS_RPN:
         feed_dict = {net.data: blobs['data'], net.im_info: blobs['im_info'], net.keep_prob: 1.0}
 
-    rois = sess.run([net.get_output('rois')[0]], feed_dict=feed_dict)
+    rois = sess.run([net.get_output('rois')[0],net.get_output('rpn_targets')], feed_dict=feed_dict)
+
+    rois = rois[0]
+    #print('???????/',len(rois))
     # rois[0].shape [1000, 5]
-    rois=rois[0]
-    print(rois.shape)
-    print(rois[0])
+    #rois=rois[0]
+    # print(rois.shape)
+    # print(rois[0])
 
     scores = rois[:, 0]
     if cfg.TEST.HAS_RPN:
