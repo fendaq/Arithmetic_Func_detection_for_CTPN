@@ -43,29 +43,40 @@ def proposal_layer(rpn_cls_prob_reshape, rpn_bbox_pred, im_info, cfg_key, _feat_
 
     """
     cfg_key=cfg_key.decode('ascii')
-    _anchors = generate_anchors(scales=np.array(anchor_scales))#生成基本的9个anchor
-    _num_anchors = _anchors.shape[0]#9个anchor
+    # TODO 后期可能进行修改anchor的尺度,因为文本较为密集,需要进行完善修改
+    # _anchors value
+    # [[0    2   15   13]
+    #  [0    0   15   15]
+    #  [0   -4   15   19]
+    #  [0   -9   15   24]
+    #  [0  -16   15   31]
+    #  [0  -26   15   41]
+    #  [0  -41   15   56]
+    #  [0  -62   15   77]
+    #  [0  -91   15  106]
+    #  [0 -134   15  149]]
+    _anchors = generate_anchors(scales=np.array(anchor_scales))#生成基本的10个anchor
+    _num_anchors = _anchors.shape[0]#10个anchor
 
     im_info = im_info[0]#原始图像的高宽、缩放尺度
 
     assert rpn_cls_prob_reshape.shape[0] == 1, \
         'Only single item batches are supported'
-    print(cfg_key)
     pre_nms_topN  = cfg[cfg_key].RPN_PRE_NMS_TOP_N#12000,在做nms之前，最多保留的候选box数目
     post_nms_topN = cfg[cfg_key].RPN_POST_NMS_TOP_N#2000，做完nms之后，最多保留的box的数目
     nms_thresh    = cfg[cfg_key].RPN_NMS_THRESH#nms用参数，阈值是0.7
     min_size      = cfg[cfg_key].RPN_MIN_SIZE#候选box的最小尺寸，目前是16，高宽均要大于16
-    #TODO 后期需要修改这个最小尺寸，改为8？
 
     height, width = rpn_cls_prob_reshape.shape[1:3]#feature-map的高宽
 
     # the first set of _num_anchors channels are bg probs
     # the second set are the fg probs, which we want
     # (1, H, W, A)
+    # 获取第一个分类结果
     scores = np.reshape(np.reshape(rpn_cls_prob_reshape, [1, height, width, _num_anchors, 2])[:,:,:,:,1],
                         [1, height, width, _num_anchors])
     #提取到object的分数，non-object的我们不关心
-    #并reshape到1*H*W*9
+    #并reshape到1*H*W*10
 
     bbox_deltas = rpn_bbox_pred#模型输出的pred是相对值，需要进一步处理成真实图像中的坐标
     #im_info = bottom[2].data[0, :]
@@ -82,9 +93,17 @@ def proposal_layer(rpn_cls_prob_reshape, rpn_bbox_pred, im_info, cfg_key, _feat_
     # 同anchor-target-layer-tf这个文件一样，生成anchor的shift，进一步得到整张图像上的所有anchor
     shift_x = np.arange(0, width) * _feat_stride
     shift_y = np.arange(0, height) * _feat_stride
+    #print('w,h,x',width,height,width*height)
+
+    # shift_x shape = [height, width]
+    # 生成同样维度的两个矩阵
     shift_x, shift_y = np.meshgrid(shift_x, shift_y)
+    # print("shift_x", shift_x.shape)
+    # print("shift_y", shift_y.shape)
+    # shifts shape = [height*width,4]
     shifts = np.vstack((shift_x.ravel(), shift_y.ravel(),
                         shift_x.ravel(), shift_y.ravel())).transpose()
+    #print("shift shape", shifts.shape)
 
     # Enumerate all shifted anchors:
     #
@@ -92,11 +111,14 @@ def proposal_layer(rpn_cls_prob_reshape, rpn_bbox_pred, im_info, cfg_key, _feat_
     # cell K shifts (K, 1, 4) to get
     # shift anchors (K, A, 4)
     # reshape to (K*A, 4) shifted anchors
-    A = _num_anchors
-    K = shifts.shape[0]
+    A = _num_anchors # 10
+    K = shifts.shape[0] # height*width,[height*width,4]
     anchors = _anchors.reshape((1, A, 4)) + \
               shifts.reshape((1, K, 4)).transpose((1, 0, 2))
+    # print('_anchors.reshape((1, A, 4))',np.shape(_anchors.reshape((1, A, 4))))
+    # print('shifts.reshape((1, K, 4)).transpose((1, 0, 2))',np.shape(shifts.reshape((1, K, 4)).transpose((1, 0, 2))))
     anchors = anchors.reshape((K * A, 4))#这里得到的anchor就是整张图像上的所有anchor
+    print(anchors)
 
     # Transpose and reshape predicted bbox transformations to get them
     # into the same order as the anchors:

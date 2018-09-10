@@ -84,7 +84,7 @@ class SolverWrapper(object):
         tf.summary.scalar('rpn_reg_loss', rpn_loss_box)
         tf.summary.scalar('rpn_cls_loss', rpn_cross_entropy)
         tf.summary.scalar('model_loss', model_loss)
-        tf.summary.scalar('total_loss',total_loss)
+        tf.summary.scalar('total_loss', total_loss)
         summary_op = tf.summary.merge_all()
 
         log_image, log_image_data, log_image_name =\
@@ -185,6 +185,7 @@ def get_training_roidb(imdb):
     """Returns a roidb (Region of Interest database) for use in training."""
     if cfg.TRAIN.USE_FLIPPED:
         print('Appending horizontally-flipped training examples...')
+        # 水平旋转图像
         imdb.append_flipped_images()
         print('done')
 

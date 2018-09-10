@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 from .network import Network
 from lib.fast_rcnn.config import cfg
 
@@ -37,7 +38,7 @@ class VGGnet_test(Network):
          .conv(3, 3, 512, 1, 1, name='conv5_3'))
 
         (self.feed('conv5_3').conv(3, 3, 512, 1, 1, name='rpn_conv/3x3'))
-
+        # lstm_o shape = [1, 50, 37, 512] or [1, 62, 35, 512]
         (self.feed('rpn_conv/3x3').Bilstm(512, 128, 512, name='lstm_o'))
         # lstm_o shape = [N, H, W, d_o]
         (self.feed('lstm_o').lstm_fc(512, len(anchor_scales) * 10 * 4, name='rpn_bbox_pred'))
@@ -55,3 +56,19 @@ class VGGnet_test(Network):
 
         (self.feed('rpn_cls_prob_reshape', 'rpn_bbox_pred', 'im_info')
          .proposal_layer(_feat_stride, anchor_scales, 'TEST', name='rois'))
+
+def my_func(in_2):
+    a = np.reshape(in_2, [-1,2])
+    print(a)
+    print('?????')
+    return a
+
+if __name__ == "__main__":
+    # a = tf.constant([2,3,4,5,6,7,8,3])
+    # b = tf.py_func(my_func,[a],tf.float16)
+    # sess = tf.Session()
+    # c = sess.run(b)
+    # print(c)
+    a = np.zeros((1, 10, 4))
+    b = np.zeros((185, 1, 4))
+    print(np.shape(a*b))

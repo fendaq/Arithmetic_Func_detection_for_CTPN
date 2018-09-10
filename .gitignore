@@ -5,10 +5,12 @@
 # model
 checkpoints
 *.pb
+*.npy
 
 # image
 *.png
 *.jpg
+*.JPG
 
 # txt result
 *.txt
@@ -16,3 +18,7 @@ checkpoints
 # 编译
 *.pyc
 __*
+
+# logs output
+events*
+*.pkl

@@ -5,9 +5,6 @@ from lib.fast_rcnn.config import cfg
 from .text_proposal_connector import TextProposalConnector
 from .text_proposal_connector_oriented import TextProposalConnector as TextProposalConnectorOriented
 from .text_connect_cfg import Config as TextLineCfg
-
-
-
 class TextDetector:
     def __init__(self):
         self.mode= cfg.TEST.DETECT_MODE
