@@ -115,6 +115,7 @@ if __name__ == '__main__':
     #im = 128 * np.ones((300, 300, 3), dtype=np.uint8)
     # for i in range(2):
     #     _, _ = test_ctpn(sess, net, im)
+
     im_names = glob.glob(os.path.join(cfg.DATA_DIR, 'demo', '*.png')) + \
                glob.glob(os.path.join(cfg.DATA_DIR, 'demo', '*.jpg')) + \
                glob.glob(os.path.join(cfg.DATA_DIR, 'demo', '*.JPG'))
