@@ -3,8 +3,8 @@ import numpy as np
 import math
 import cv2 as cv
 
-path = '/media/D/code/OCR/text-detection-ctpn/data/mlt_english+chinese/image'
-gt_path = '/media/D/code/OCR/text-detection-ctpn/data/mlt_english+chinese/label'
+path = '/home/tony/ocr/ocr_dataset/ctpn/ai_data/img'
+gt_path = '/home/tony/ocr/ocr_dataset/ctpn/ai_data/label'
 out_path = 're_image'
 if not os.path.exists(out_path):
     os.makedirs(out_path)
@@ -16,7 +16,7 @@ for file in files:
     if basename.lower().split('.')[-1] not in ['jpg', 'png']:
         continue
     stem, ext = os.path.splitext(basename)
-    gt_file = os.path.join(gt_path, 'gt_' + stem + '.txt')
+    gt_file = os.path.join(gt_path,stem + '.txt')
     img_path = os.path.join(path, file)
     print(img_path)
     img = cv.imread(img_path)
@@ -46,6 +46,7 @@ for file in files:
         pt_y[2, 0] = int(float(splitted_line[5]) / img_size[0] * re_size[0])
         pt_x[3, 0] = int(float(splitted_line[6]) / img_size[1] * re_size[1])
         pt_y[3, 0] = int(float(splitted_line[7]) / img_size[0] * re_size[0])
+        class_index = int(splitted_line[8])
 
         ind_x = np.argsort(pt_x, axis=0)
         pt_x = pt_x[ind_x]
@@ -108,7 +109,8 @@ for file in files:
             os.makedirs('label_tmp')
         with open(os.path.join('label_tmp', stem) + '.txt', 'a') as f:
             for i in range(len(x_left)):
-                f.writelines("text\t")
+                f.writelines(str(class_index))
+                f.writelines("\t")
                 f.writelines(str(int(x_left[i])))
                 f.writelines("\t")
                 f.writelines(str(int(ymin)))

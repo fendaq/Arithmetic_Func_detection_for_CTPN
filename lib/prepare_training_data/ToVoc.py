@@ -42,8 +42,8 @@ def generate_xml(name, lines, img_size, class_sets, doncateothers=True):
         cls = splitted_line[0].lower()
         if not doncateothers and cls not in class_sets:
             continue
-        cls = 'dontcare' if cls not in class_sets else cls
-        if cls == 'dontcare':
+        cls = '0' if cls not in class_sets else cls
+        if cls == '0':
             continue
         obj = append_xml_node_attr('object', parent=annotation)
         occlusion = int(0)
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     for dset in ['train']:
         _labeldir = 'label_tmp'
         _imagedir = 're_image'
-        class_sets = ('text', 'dontcare')
+        class_sets = ('1', '2')
         class_sets_dict = dict((k, i) for i, k in enumerate(class_sets))
         allclasses = {}
         fs = [open(os.path.join(_dest_set_dir, cls + '_' + dset + '.txt'), 'w') for cls in class_sets]
