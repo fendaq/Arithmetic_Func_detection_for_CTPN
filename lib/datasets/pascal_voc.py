@@ -19,10 +19,12 @@ class pascal_voc(imdb):
         self._devkit_path = self._get_default_path() if devkit_path is None \
                             else devkit_path
         self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year)
+        # 设置文本类型 TODO:需要进行改修
         self._classes = ('__background__', # always index 0
                          'text')
-
+        # 将类的类型转为dect,{'pt': 1, 'ht': 2, 'bg': 0}
         self._class_to_ind = dict(list(zip(self.classes, list(range(self.num_classes)))))
+
         self._image_ext = '.jpg'
         self._image_index = self._load_image_set_index()
         # Default to roidb handler
@@ -92,7 +94,7 @@ class pascal_voc(imdb):
                 roidb = pickle.load(fid)
             print('{} gt roidb loaded from {}'.format(self.name, cache_file))
             return roidb
-
+        # 获取所有图片的bbox等各种信息
         gt_roidb = [self._load_pascal_annotation(index)
                     for index in self.image_index]
         with open(cache_file, 'wb') as fid:
@@ -133,9 +135,12 @@ class pascal_voc(imdb):
 
         boxes = np.zeros((num_objs, 4), dtype=np.uint16)
         gt_classes = np.zeros((num_objs), dtype=np.int32)
+        # 重叠iou
         overlaps = np.zeros((num_objs, self.num_classes), dtype=np.float32)
         # "Seg" area for pascal is just the box area
+        # bbox面积
         seg_areas = np.zeros((num_objs), dtype=np.float32)
+        # 是参数difficult值
         ishards = np.zeros((num_objs), dtype=np.int32)
 
         # Load object bounding boxes into a data frame.
@@ -150,6 +155,7 @@ class pascal_voc(imdb):
             difficult = 0 if diffc == None else int(diffc.text)
             ishards[ix] = difficult
 
+            # class 编号
             cls = self._class_to_ind[obj.find('name').text.lower().strip()]
             boxes[ix, :] = [x1, y1, x2, y2]
             gt_classes[ix] = cls
