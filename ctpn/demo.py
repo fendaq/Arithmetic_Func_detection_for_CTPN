@@ -116,7 +116,8 @@ if __name__ == '__main__':
     # for i in range(2):
     #     _, _ = test_ctpn(sess, net, im)
     im_names = glob.glob(os.path.join(cfg.DATA_DIR, 'demo', '*.png')) + \
-               glob.glob(os.path.join(cfg.DATA_DIR, 'demo', '*.jpg'))
+               glob.glob(os.path.join(cfg.DATA_DIR, 'demo', '*.jpg')) + \
+               glob.glob(os.path.join(cfg.DATA_DIR, 'demo', '*.JPG'))
 
     for im_name in im_names:
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')

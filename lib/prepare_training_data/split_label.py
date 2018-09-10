@@ -27,6 +27,7 @@ for file in files:
     im_scale = float(600) / float(im_size_min)
     if np.round(im_scale * im_size_max) > 1200:
         im_scale = float(1200) / float(im_size_max)
+    # 图像进行resize
     re_im = cv.resize(img, None, None, fx=im_scale, fy=im_scale, interpolation=cv.INTER_LINEAR)
     re_size = re_im.shape
     cv.imwrite(os.path.join(out_path, stem) + '.jpg', re_im)
