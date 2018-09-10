@@ -47,7 +47,7 @@ def draw_boxes(img, image_name, boxes, scale):
             # cv2.line(img, (int(box[0]), int(box[1])), (int(box[4]), int(box[5])), color, 2)
             # cv2.line(img, (int(box[6]), int(box[7])), (int(box[2]), int(box[3])), color, 2)
             # cv2.line(img, (int(box[4]), int(box[5])), (int(box[6]), int(box[7])), color, 2)
-            cv2.rectangle(img,(int(box[0]), int(box[1])),(int(box[2]), int(box[5])),color, 2)
+            cv2.rectangle(img, (int(box[0]), int(box[1])),(int(box[2]), int(box[5])),color, 2)
 
             min_x = min(int(box[0] / scale), int(box[2] / scale), int(box[4] / scale), int(box[6] / scale))
             min_y = min(int(box[1] / scale), int(box[3] / scale), int(box[5] / scale), int(box[7] / scale))
@@ -79,6 +79,7 @@ def ctpn(sess, net, image_name):
     #     cv2.rectangle(img_re, (boxes[i][0],boxes[i][1]),(boxes[i][2],boxes[i][3]),(255,0,0),1)
     # cv2.imshow('333', img_re)
     # cv2.waitKey()
+    # assert o,'dwa'
 
     textdetector = TextDetector()
     boxes = textdetector.detect(boxes, scores[:, np.newaxis], img.shape[:2])
@@ -111,11 +112,9 @@ if __name__ == '__main__':
         print('done')
     except:
         raise 'Check your pretrained {:s}'.format(ckpt.model_checkpoint_path)
-    print('111111111')
-    im = 128 * np.ones((300, 300, 3), dtype=np.uint8)
+    #im = 128 * np.ones((300, 300, 3), dtype=np.uint8)
     # for i in range(2):
     #     _, _ = test_ctpn(sess, net, im)
-    print('222222222')
     im_names = glob.glob(os.path.join(cfg.DATA_DIR, 'demo', '*.png')) + \
                glob.glob(os.path.join(cfg.DATA_DIR, 'demo', '*.jpg'))
 

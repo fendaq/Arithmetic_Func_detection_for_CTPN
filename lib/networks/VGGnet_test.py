@@ -1,5 +1,5 @@
 import tensorflow as tf
-#import numpy as np
+import numpy as np
 from .network import Network
 from lib.fast_rcnn.config import cfg
 
@@ -64,8 +64,11 @@ def my_func(in_2):
     return a
 
 if __name__ == "__main__":
-    a = tf.constant([2,3,4,5,6,7,8,3])
-    b = tf.py_func(my_func,[a],tf.float16)
-    sess = tf.Session()
-    c = sess.run(b)
-    print(c)
+    # a = tf.constant([2,3,4,5,6,7,8,3])
+    # b = tf.py_func(my_func,[a],tf.float16)
+    # sess = tf.Session()
+    # c = sess.run(b)
+    # print(c)
+    a = np.zeros((1, 10, 4))
+    b = np.zeros((185, 1, 4))
+    print(np.shape(a*b))
