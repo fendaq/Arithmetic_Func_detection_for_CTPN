@@ -6,6 +6,7 @@ import cv2 as cv
 path = '/home/tony/ocr/ocr_dataset/ctpn/ai_data/img'
 gt_path = '/home/tony/ocr/ocr_dataset/ctpn/ai_data/label'
 out_path = 're_image'
+class_name = ['dontcare', 'handwritten', 'print']
 if not os.path.exists(out_path):
     os.makedirs(out_path)
 files = os.listdir(path)
@@ -109,7 +110,7 @@ for file in files:
             os.makedirs('label_tmp')
         with open(os.path.join('label_tmp', stem) + '.txt', 'a') as f:
             for i in range(len(x_left)):
-                f.writelines(str(class_index))
+                f.writelines(class_name[class_index])
                 f.writelines("\t")
                 f.writelines(str(int(x_left[i])))
                 f.writelines("\t")

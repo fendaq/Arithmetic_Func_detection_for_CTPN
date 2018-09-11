@@ -103,7 +103,6 @@ class Network(object):
             shape = tf.shape(img)
             N, H, W, C = shape[0], shape[1], shape[2], shape[3]
             img = tf.reshape(img, [N * H, W, C])
-            print('dididididi',d_i)
             img.set_shape([None, None, d_i])
 
             lstm_fw_cell = tf.contrib.rnn.LSTMCell(d_h, state_is_tuple=True)
@@ -261,6 +260,8 @@ class Network(object):
     def anchor_target_layer(self, input, _feat_stride, anchor_scales, name):
         if isinstance(input[0], tuple):
             input[0] = input[0][0]
+            print('input size ', input[0])
+
 
         with tf.variable_scope(name) as scope:
             # 'rpn_cls_score', 'gt_boxes', 'gt_ishard', 'dontcare_areas', 'im_info'
@@ -409,7 +410,9 @@ class Network(object):
 
 
     def build_loss(self, ohem=False):
-        # classification loss
+        # 3 classification loss
+        # self.get_output('rpn_cls_score_reshape') =
+        # rpn_labels, rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights
         rpn_cls_score = tf.reshape(self.get_output('rpn_cls_score_reshape'), [-1, 2])  # shape (HxWxA, 2)
         rpn_label = tf.reshape(self.get_output('rpn-data')[0], [-1])  # shape (HxWxA)
         # ignore_label(-1)

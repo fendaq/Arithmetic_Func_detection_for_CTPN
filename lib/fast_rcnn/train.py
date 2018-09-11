@@ -138,6 +138,10 @@ class SolverWrapper(object):
 
         last_snapshot_iter = -1
         timer = Timer()
+
+
+
+
         for iter in range(restore_iter, max_iters):
             timer.tic()
             # learning rate
@@ -147,13 +151,15 @@ class SolverWrapper(object):
 
             # get one batch
             blobs = data_layer.forward()
-
+            # print("blobs['gt_ishard']",blobs['gt_ishard'])
+            # print('-------------------------------------------')
+            # print("blobs['data'] ", blobs['data'].shape)
             feed_dict={
                 self.net.data: blobs['data'],
                 self.net.im_info: blobs['im_info'],
                 self.net.keep_prob: 0.5,
                 self.net.gt_boxes: blobs['gt_boxes'],
-                self.net.gt_ishard: blobs['gt_ishard'],
+                self.net.gt_ishard: blobs['gt_ishard'], # 全为0
                 self.net.dontcare_areas: blobs['dontcare_areas']
             }
             res_fetches=[]

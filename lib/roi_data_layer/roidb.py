@@ -24,6 +24,7 @@ def prepare_roidb(imdb):
         max_overlaps = gt_overlaps.max(axis=1)
         # gt class that had the max overlap
         max_classes = gt_overlaps.argmax(axis=1)
+
         roidb[i]['max_classes'] = max_classes
         roidb[i]['max_overlaps'] = max_overlaps
         # sanity checks
@@ -92,6 +93,7 @@ def add_bbox_regression_targets(roidb):
     if cfg.TRAIN.BBOX_NORMALIZE_TARGETS:
         print("Normalizing targets")
         for im_i in range(num_images):
+
             targets = roidb[im_i]['bbox_targets']
             for cls in range(1, num_classes):
                 cls_inds = np.where(targets[:, 0] == cls)[0]

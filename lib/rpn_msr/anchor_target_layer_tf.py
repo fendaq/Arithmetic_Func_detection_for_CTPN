@@ -30,8 +30,9 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, gt_ishard, dontcare_areas, im_i
     rpn_bbox_outside_weights: (HxWxA, 4) used to balance the fg/bg,
                             beacuse the numbers of bgs and fgs mays significiantly different
     """
-    _anchors = generate_anchors(scales=np.array(anchor_scales))#生成基本的anchor,一共9个
-    _num_anchors = _anchors.shape[0]#9个anchor
+    _anchors = generate_anchors(scales=np.array(anchor_scales))#生成基本的anchor,一共10个
+    _num_anchors = _anchors.shape[0]#10个anchor
+    print('rpn_cls_score shape', rpn_cls_score.shape)
 
     if DEBUG:
         print('anchors:')
@@ -89,7 +90,7 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, gt_ishard, dontcare_areas, im_i
     # cell K shifts (K, 1, 4) to get
     # shift anchors (K, A, 4)
     # reshape to (K*A, 4) shifted anchors
-    A = _num_anchors#9个anchor
+    A = _num_anchors#10个anchor
     K = shifts.shape[0]#50*37，feature-map的宽乘高的大小
     all_anchors = (_anchors.reshape((1, A, 4)) +
                    shifts.reshape((1, K, 4)).transpose((1, 0, 2)))#相当于复制宽高的维度，然后相加
@@ -105,14 +106,14 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, gt_ishard, dontcare_areas, im_i
         (all_anchors[:, 3] < im_info[0] + _allowed_border)    # height
     )[0]
 
-    if DEBUG:
-        print('total_anchors', total_anchors)
-        print('inds_inside', len(inds_inside))
+    # if DEBUG:
+    #print('total_anchors', total_anchors)
+    #print('inds_inside', len(inds_inside))
 
     # keep only inside anchors
     anchors = all_anchors[inds_inside, :]#保留那些在图像内的anchor
-    if DEBUG:
-        print('anchors.shape', anchors.shape)
+    # if DEBUG:
+    #print('anchors.shape', anchors.shape)
 
     #至此，anchor准备好了
     #--------------------------------------------------------------
@@ -130,7 +131,7 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, gt_ishard, dontcare_areas, im_i
     # 存放每一个anchor和每一个gtbox之间的overlap
     argmax_overlaps = overlaps.argmax(axis=1) # (A)#找到和每一个gtbox，overlap最大的那个anchor
     max_overlaps = overlaps[np.arange(len(inds_inside)), argmax_overlaps]
-    gt_argmax_overlaps = overlaps.argmax(axis=0) # G#找到每个位置上9个anchor中与gtbox，overlap最大的那个
+    gt_argmax_overlaps = overlaps.argmax(axis=0) # G#找到每个位置上10个anchor中与gtbox，overlap最大的那个
     gt_max_overlaps = overlaps[gt_argmax_overlaps,
                                np.arange(overlaps.shape[1])]
     gt_argmax_overlaps = np.where(overlaps == gt_max_overlaps)[0]
@@ -147,32 +148,32 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, gt_ishard, dontcare_areas, im_i
     if cfg.TRAIN.RPN_CLOBBER_POSITIVES:
         # assign bg labels last so that negative labels can clobber positives
         labels[max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
-
     # preclude dontcare areas
-    if dontcare_areas is not None and dontcare_areas.shape[0] > 0:#这里我们暂时不考虑有doncare_area的存在
-        # intersec shape is D x A
-        intersecs = bbox_intersections(
-            np.ascontiguousarray(dontcare_areas, dtype=np.float), # D x 4
-            np.ascontiguousarray(anchors, dtype=np.float) # A x 4
-        )
-        intersecs_ = intersecs.sum(axis=0) # A x 1
-        labels[intersecs_ > cfg.TRAIN.DONTCARE_AREA_INTERSECTION_HI] = -1
-
-    #这里我们暂时不考虑难样本的问题
-    # preclude hard samples that are highly occlusioned, truncated or difficult to see
-    if cfg.TRAIN.PRECLUDE_HARD_SAMPLES and gt_ishard is not None and gt_ishard.shape[0] > 0:
-        assert gt_ishard.shape[0] == gt_boxes.shape[0]
-        gt_ishard = gt_ishard.astype(int)
-        gt_hardboxes = gt_boxes[gt_ishard == 1, :]
-        if gt_hardboxes.shape[0] > 0:
-            # H x A
-            hard_overlaps = bbox_overlaps(
-                np.ascontiguousarray(gt_hardboxes, dtype=np.float), # H x 4
-                np.ascontiguousarray(anchors, dtype=np.float)) # A x 4
-            hard_max_overlaps = hard_overlaps.max(axis=0)  # (A)
-            labels[hard_max_overlaps >= cfg.TRAIN.RPN_POSITIVE_OVERLAP] = -1
-            max_intersec_label_inds = hard_overlaps.argmax(axis=1) # H x 1
-            labels[max_intersec_label_inds] = -1 #
+    # if dontcare_areas is not None and dontcare_areas.shape[0] > 0:#这里我们暂时不考虑有doncare_area的存在
+    #     # intersec shape is D x A
+    #     intersecs = bbox_intersections(
+    #         np.ascontiguousarray(dontcare_areas, dtype=np.float), # D x 4
+    #         np.ascontiguousarray(anchors, dtype=np.float) # A x 4
+    #     )
+    #     intersecs_ = intersecs.sum(axis=0) # A x 1
+    #     labels[intersecs_ > cfg.TRAIN.DONTCARE_AREA_INTERSECTION_HI] = -1
+    #
+    # #这里我们暂时不考虑难样本的问题
+    # # preclude hard samples that are highly occlusioned, truncated or difficult to see
+    # if cfg.TRAIN.PRECLUDE_HARD_SAMPLES and gt_ishard is not None and gt_ishard.shape[0] > 0:
+    #
+    #     assert gt_ishard.shape[0] == gt_boxes.shape[0]
+    #     gt_ishard = gt_ishard.astype(int)
+    #     gt_hardboxes = gt_boxes[gt_ishard == 1, :]
+    #     if gt_hardboxes.shape[0] > 0:
+    #         # H x A
+    #         hard_overlaps = bbox_overlaps(
+    #             np.ascontiguousarray(gt_hardboxes, dtype=np.float), # H x 4
+    #             np.ascontiguousarray(anchors, dtype=np.float)) # A x 4
+    #         hard_max_overlaps = hard_overlaps.max(axis=0)  # (A)
+    #         labels[hard_max_overlaps >= cfg.TRAIN.RPN_POSITIVE_OVERLAP] = -1
+    #         max_intersec_label_inds = hard_overlaps.argmax(axis=1) # H x 1
+    #         labels[max_intersec_label_inds] = -1 #
 
     # subsample positive labels if we have too many
     #对正样本进行采样，如果正样本的数量太多的话
@@ -202,7 +203,7 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, gt_ishard, dontcare_areas, im_i
     #--------------------------------------------------------------
     bbox_targets = np.zeros((len(inds_inside), 4), dtype=np.float32)
     bbox_targets = _compute_targets(anchors, gt_boxes[argmax_overlaps, :])#根据anchor和gtbox计算得真值（anchor和gtbox之间的偏差）
-
+    # bbox_targets.shape [  inds_inside, 4]
 
     bbox_inside_weights = np.zeros((len(inds_inside), 4), dtype=np.float32)
     bbox_inside_weights[labels == 1, :] = np.array(cfg.TRAIN.RPN_BBOX_INSIDE_WEIGHTS)#内部权重，前景就给1，其他是0
@@ -272,7 +273,11 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, gt_ishard, dontcare_areas, im_i
     bbox_outside_weights = bbox_outside_weights \
         .reshape((1, height, width, A * 4))
     rpn_bbox_outside_weights = bbox_outside_weights
+    # print('rpn_bbox_targets', rpn_bbox_targets.shape, rpn_bbox_targets)
+    # print('rpn_labels',rpn_labels.shape, rpn_labels)
 
+    # rpn_bbox_targets shape [1, 37, 40, 40]
+    # rpn_labels (1, 37, 40, 10)
     return rpn_labels, rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights
 
 
