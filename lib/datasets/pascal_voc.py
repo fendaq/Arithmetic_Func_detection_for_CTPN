@@ -21,10 +21,9 @@ class pascal_voc(imdb):
         self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year)
         # 设置文本类型 TODO:需要进行改修
         self._classes = ('__background__', # always index 0
-                         'text')
-        # 将类的类型转为dect,{'pt': 1, 'ht': 2, 'bg': 0}
+                         'handwritten', 'print')
+        # 将类的类型转为dect,{'h': 1, 'p': 2, 'bg': 0}
         self._class_to_ind = dict(list(zip(self.classes, list(range(self.num_classes)))))
-
         self._image_ext = '.jpg'
         self._image_index = self._load_image_set_index()
         # Default to roidb handler

@@ -15,6 +15,7 @@ if __name__ == '__main__':
     pprint.pprint(cfg)
     # image database
     imdb = get_imdb('voc_2007_trainval')
+    #imdb.
     print('Loaded dataset `{:s}` for training'.format(imdb.name))
     roidb = get_training_roidb(imdb)
 

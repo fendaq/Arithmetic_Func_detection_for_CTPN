@@ -5,6 +5,8 @@ import glob
 import shutil
 import numpy as np
 
+
+
 def generate_xml(name, lines, img_size, class_sets, doncateothers=True):
     doc = Document()
 
@@ -107,7 +109,7 @@ if __name__ == '__main__':
     for dset in ['train']:
         _labeldir = 'label_tmp'
         _imagedir = 're_image'
-        class_sets = ('text', 'dontcare')
+        class_sets = ('dontcare', 'handwritten', 'print')
         class_sets_dict = dict((k, i) for i, k in enumerate(class_sets))
         allclasses = {}
         fs = [open(os.path.join(_dest_set_dir, cls + '_' + dset + '.txt'), 'w') for cls in class_sets]
