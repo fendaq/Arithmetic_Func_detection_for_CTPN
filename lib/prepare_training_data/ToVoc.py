@@ -5,6 +5,8 @@ import glob
 import shutil
 import numpy as np
 
+
+
 def generate_xml(name, lines, img_size, class_sets, doncateothers=True):
     doc = Document()
 
@@ -42,8 +44,8 @@ def generate_xml(name, lines, img_size, class_sets, doncateothers=True):
         cls = splitted_line[0].lower()
         if not doncateothers and cls not in class_sets:
             continue
-        cls = '0' if cls not in class_sets else cls
-        if cls == '0':
+        cls = 'dontcare' if cls not in class_sets else cls
+        if cls == 'dontcare':
             continue
         obj = append_xml_node_attr('object', parent=annotation)
         occlusion = int(0)
@@ -107,7 +109,7 @@ if __name__ == '__main__':
     for dset in ['train']:
         _labeldir = 'label_tmp'
         _imagedir = 're_image'
-        class_sets = ('1', '2')
+        class_sets = ('dontcare', 'handwritten', 'print')
         class_sets_dict = dict((k, i) for i, k in enumerate(class_sets))
         allclasses = {}
         fs = [open(os.path.join(_dest_set_dir, cls + '_' + dset + '.txt'), 'w') for cls in class_sets]
