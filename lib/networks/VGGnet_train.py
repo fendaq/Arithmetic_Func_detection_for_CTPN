@@ -49,7 +49,7 @@ class VGGnet_train(Network):
 
         (self.feed('rpn_conv/3x3').Bilstm(512,128,512,name='lstm_o'))
         (self.feed('lstm_o').lstm_fc(512,len(anchor_scales) * 10 * 4, name='rpn_bbox_pred'))
-        (self.feed('lstm_o').lstm_fc(512,len(anchor_scales) * 10 * 2, name='rpn_cls_score'))
+        (self.feed('lstm_o').lstm_fc(512,len(anchor_scales) * 10 * cfg.NCLASSES, name='rpn_cls_score'))
 
         # generating training labels on the fly
         # output: rpn_labels(HxWxA, 2) rpn_bbox_targets(HxWxA, 4) rpn_bbox_inside_weights rpn_bbox_outside_weights
@@ -60,5 +60,6 @@ class VGGnet_train(Network):
         # shape is (1, H, W, Ax2) -> (1, H, WxA, 2)
         # 给之前得到的score进行softmax，得到0-1之间的得分
         (self.feed('rpn_cls_score')
-             .spatial_reshape_layer(2, name = 'rpn_cls_score_reshape')
+             .spatial_reshape_layer(cfg.NCLASSES, name = 'rpn_cls_score_reshape')
              .spatial_softmax(name='rpn_cls_prob'))
+

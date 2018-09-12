@@ -1,6 +1,7 @@
 import os.path
 import pprint
 import sys
+import cv2
 
 sys.path.append(os.getcwd())
 from lib.fast_rcnn.train import get_training_roidb, train_net
@@ -16,16 +17,29 @@ if __name__ == '__main__':
     # image database
     imdb = get_imdb('voc_2007_trainval')
     #imdb.
-    print('Loaded dataset `{:s}` for training'.format(imdb.name))
+    # print('Loaded dataset `{:s}` for training'.format(imdb.name))
     roidb = get_training_roidb(imdb)
+
+    # print('roidb max_classes', len(roidb[0]['max_classes']))
+    # print('roidb max_overlaps', len(roidb[0]['max_overlaps']))
 
     output_dir = get_output_dir(imdb, None)
     log_dir = get_log_dir(imdb)
-    print('Output will be saved to `{:s}`'.format(output_dir))
-    print('Logs will be saved to `{:s}`'.format(log_dir))
+    # print('Output will be saved to `{:s}`'.format(output_dir))
+    # print('Logs will be saved to `{:s}`'.format(log_dir))
 
     device_name = '/gpu:0'
-    print(device_name)
+    # print(device_name)
+
+    img = cv2.imread(roidb[0]['image'])
+    # print(roidb[0]['image'])
+    for box in roidb[0]['boxes']:
+        # print(box[0],box[1],box[2],box[3])
+        cv2.rectangle(img, (box[0],box[1]),(box[2],box[3]),(255,0,0))
+
+    cv2.imshow('w', img)
+    cv2.waitKey()
+    assert 0,'dwa'
 
     network = get_network('VGGnet_train')
 

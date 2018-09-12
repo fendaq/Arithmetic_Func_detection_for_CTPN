@@ -1,6 +1,7 @@
 from __future__ import print_function
 import numpy as np
 import os
+import cv2
 import tensorflow as tf
 from lib.roi_data_layer.layer import RoIDataLayer
 from lib.utils.timer import Timer
@@ -20,6 +21,7 @@ class SolverWrapper(object):
 
         print('Computing bounding-box regression targets...')
         if cfg.TRAIN.BBOX_REG:
+            # [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.] [0.1 0.1 0.2 0.2 0.1 0.1 0.2 0.2 0.1 0.1 0.2 0.2]
             self.bbox_means, self.bbox_stds = rdl_roidb.add_bbox_regression_targets(roidb)
         print('done')
 
@@ -139,9 +141,6 @@ class SolverWrapper(object):
         last_snapshot_iter = -1
         timer = Timer()
 
-
-
-
         for iter in range(restore_iter, max_iters):
             timer.tic()
             # learning rate
@@ -151,9 +150,23 @@ class SolverWrapper(object):
 
             # get one batch
             blobs = data_layer.forward()
+            #print('blob 12111111111111111111',blobs['gt_boxes'].shape)
             # print("blobs['gt_ishard']",blobs['gt_ishard'])
             # print('-------------------------------------------')
-            # print("blobs['data'] ", blobs['data'].shape)
+            #print("blobs['data'] ", len(np.where(blobs['data'][0,:,:,0]!=152.0199)),blobs['data'])
+
+            img = blobs['data'][0, :, :, :]
+            print('img shape ', img.shape)
+            print('blobs[gt_boxes]',blobs['gt_boxes'].shape)
+
+            for bbox in blobs['gt_boxes']:
+                cv2.rectangle(img, (bbox[0],bbox[1]),(bbox[2],bbox[3]),(255,0,0))
+
+            cv2.imshow('dd', img)
+            cv2.waitKey()
+
+            assert 0, 'dwad'
+
             feed_dict={
                 self.net.data: blobs['data'],
                 self.net.im_info: blobs['im_info'],
@@ -163,11 +176,11 @@ class SolverWrapper(object):
                 self.net.dontcare_areas: blobs['dontcare_areas']
             }
             res_fetches=[]
-            fetch_list = [total_loss,model_loss, rpn_cross_entropy, rpn_loss_box,
+            fetch_list = [total_loss, model_loss, rpn_cross_entropy, rpn_loss_box,
                           summary_op,
                           train_op] + res_fetches
 
-            total_loss_val,model_loss_val, rpn_loss_cls_val, rpn_loss_box_val, \
+            total_loss_val, model_loss_val, rpn_loss_cls_val, rpn_loss_box_val, \
                 summary_str, _ = sess.run(fetches=fetch_list, feed_dict=feed_dict)
 
             self.writer.add_summary(summary=summary_str, global_step=global_step.eval())
@@ -192,7 +205,7 @@ def get_training_roidb(imdb):
     if cfg.TRAIN.USE_FLIPPED:
         print('Appending horizontally-flipped training examples...')
         # 水平旋转图像
-        imdb.append_flipped_images()
+        #imdb.append_flipped_images()
         print('done')
 
     print('Preparing training data...')

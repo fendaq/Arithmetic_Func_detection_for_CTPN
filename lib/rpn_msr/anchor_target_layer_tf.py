@@ -117,7 +117,7 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, gt_ishard, dontcare_areas, im_i
 
     #至此，anchor准备好了
     #--------------------------------------------------------------
-    # label: 1 is positive, 0 is negative, -1 is dont care
+    # label: 2 is print, 1 is hanwriten, 0 is negative, -1 is dont care
     # (A)
     labels = np.empty((len(inds_inside), ), dtype=np.float32)
     labels.fill(-1)#初始化label，均为-1

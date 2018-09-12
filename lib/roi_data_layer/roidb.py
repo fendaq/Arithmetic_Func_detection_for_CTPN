@@ -82,10 +82,15 @@ def add_bbox_regression_targets(roidb):
         assert np.min(stds) < 0.01, \
             'Boxes std is too small, std:{}'.format(stds)
 
+
+
+
     print('bbox target means:')
+    # means shape [3,4]=0
     print(means)
     print(means[1:, :].mean(axis=0)) # ignore bg class
     print('bbox target stdevs:')
+    # stdevs shape [3,4] =  [0.1 0.1 0.2 0.2] *3
     print(stds)
     print(stds[1:, :].mean(axis=0)) # ignore bg class
 
@@ -104,6 +109,9 @@ def add_bbox_regression_targets(roidb):
 
     # These values will be needed for making predictions
     # (the predicts will need to be unnormalized and uncentered)
+
+    #print('bbox_targets', roidb[0]['bbox_targets'], len(roidb[0]['bbox_targets']))
+
     return means.ravel(), stds.ravel()
 
 def _compute_targets(rois, overlaps, labels):

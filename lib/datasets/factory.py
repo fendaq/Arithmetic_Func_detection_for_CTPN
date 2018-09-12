@@ -7,14 +7,15 @@ def _selective_search_IJCV_top_k(split, year, top_k):
     return imdb
 # Set up voc_<year>_<split> using selective search "fast" mode
 for year in ['2007', '2012', '0712']:
-    for split in ['train', 'val', 'trainval', 'test']:
+    #for split in ['train', 'val', 'trainval', 'test']:
+    for split in ['trainval']:
         name = 'voc_{}_{}'.format(year, split)
         __sets[name] = (lambda split=split, year=year:
                 pascal_voc(split, year))
 
 def get_imdb(name):
     """Get an imdb (image database) by name."""
-    print('sets:',__sets)
+
     if name not in __sets:
         print((list_imdbs()))
         raise KeyError('Unknown dataset: {}'.format(name))

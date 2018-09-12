@@ -14,10 +14,10 @@ files.sort()
 #files=files[:100]
 for file in files:
     _, basename = os.path.split(file)
-    if basename.lower().split('.')[-1] not in ['jpg', 'png']:
+    if basename.lower().split('.')[-1] not in ['jpg', 'png', 'JPG']:
         continue
     stem, ext = os.path.splitext(basename)
-    gt_file = os.path.join(gt_path,stem + '.txt')
+    gt_file = os.path.join(gt_path, stem + '.txt')
     img_path = os.path.join(path, file)
     print(img_path)
     img = cv.imread(img_path)
@@ -37,40 +37,40 @@ for file in files:
         lines = f.readlines()
     for line in lines:
         splitted_line = line.strip().lower().split(',')
-        pt_x = np.zeros((4, 1))
-        pt_y = np.zeros((4, 1))
-        pt_x[0, 0] = int(float(splitted_line[0]) / img_size[1] * re_size[1])
-        pt_y[0, 0] = int(float(splitted_line[1]) / img_size[0] * re_size[0])
-        pt_x[1, 0] = int(float(splitted_line[2]) / img_size[1] * re_size[1])
-        pt_y[1, 0] = int(float(splitted_line[3]) / img_size[0] * re_size[0])
-        pt_x[2, 0] = int(float(splitted_line[4]) / img_size[1] * re_size[1])
-        pt_y[2, 0] = int(float(splitted_line[5]) / img_size[0] * re_size[0])
-        pt_x[3, 0] = int(float(splitted_line[6]) / img_size[1] * re_size[1])
-        pt_y[3, 0] = int(float(splitted_line[7]) / img_size[0] * re_size[0])
-        class_index = int(splitted_line[8])
+        # pt_x = np.zeros((4, 1))
+        # pt_y = np.zeros((4, 1))
+        # pt_x[0, 0] = int(float(splitted_line[0]) / img_size[1] * re_size[1])
+        # pt_y[0, 0] = int(float(splitted_line[1]) / img_size[0] * re_size[0])
+        # pt_x[1, 0] = int(float(splitted_line[2]) / img_size[1] * re_size[1])
+        # pt_y[1, 0] = int(float(splitted_line[3]) / img_size[0] * re_size[0])
+        # pt_x[2, 0] = int(float(splitted_line[4]) / img_size[1] * re_size[1])
+        # pt_y[2, 0] = int(float(splitted_line[5]) / img_size[0] * re_size[0])
+        # pt_x[3, 0] = int(float(splitted_line[6]) / img_size[1] * re_size[1])
+        # pt_y[3, 0] = int(float(splitted_line[7]) / img_size[0] * re_size[0])
+        class_index = int(splitted_line[4])
+        #
+        # ind_x = np.argsort(pt_x, axis=0)
+        # pt_x = pt_x[ind_x]
+        # pt_y = pt_y[ind_x]
+        #
+        # if pt_y[0] < pt_y[1]:
+        #     pt1 = (pt_x[0], pt_y[0])
+        #     pt3 = (pt_x[1], pt_y[1])
+        # else:
+        #     pt1 = (pt_x[1], pt_y[1])
+        #     pt3 = (pt_x[0], pt_y[0])
+        #
+        # if pt_y[2] < pt_y[3]:
+        #     pt2 = (pt_x[2], pt_y[2])
+        #     pt4 = (pt_x[3], pt_y[3])
+        # else:
+        #     pt2 = (pt_x[3], pt_y[3])
+        #     pt4 = (pt_x[2], pt_y[2])
 
-        ind_x = np.argsort(pt_x, axis=0)
-        pt_x = pt_x[ind_x]
-        pt_y = pt_y[ind_x]
-
-        if pt_y[0] < pt_y[1]:
-            pt1 = (pt_x[0], pt_y[0])
-            pt3 = (pt_x[1], pt_y[1])
-        else:
-            pt1 = (pt_x[1], pt_y[1])
-            pt3 = (pt_x[0], pt_y[0])
-
-        if pt_y[2] < pt_y[3]:
-            pt2 = (pt_x[2], pt_y[2])
-            pt4 = (pt_x[3], pt_y[3])
-        else:
-            pt2 = (pt_x[3], pt_y[3])
-            pt4 = (pt_x[2], pt_y[2])
-
-        xmin = int(min(pt1[0], pt2[0]))
-        ymin = int(min(pt1[1], pt2[1]))
-        xmax = int(max(pt2[0], pt4[0]))
-        ymax = int(max(pt3[1], pt4[1]))
+        xmin = int(float(splitted_line[0])/img_size[0] * re_size[0])
+        ymin = int(float(splitted_line[1])/img_size[1] * re_size[1])
+        xmax = int(float(splitted_line[2])/img_size[0] * re_size[0])
+        ymax = int(float(splitted_line[3])/img_size[1] * re_size[1])
 
         if xmin < 0:
             xmin = 0
@@ -84,7 +84,7 @@ for file in files:
         width = xmax - xmin
         height = ymax - ymin
 
-        # reimplement
+        # TODO proposal 宽度
         step = 16.0
         x_left = []
         x_right = []
@@ -108,15 +108,20 @@ for file in files:
 
         if not os.path.exists('label_tmp'):
             os.makedirs('label_tmp')
-        with open(os.path.join('label_tmp', stem) + '.txt', 'a') as f:
+        with open(os.path.join('label_tmp', stem) + '.txt', 'a+') as f:
             for i in range(len(x_left)):
                 f.writelines(class_name[class_index])
                 f.writelines("\t")
-                f.writelines(str(int(x_left[i])))
+                f.writelines(str(x_left[i]))
                 f.writelines("\t")
-                f.writelines(str(int(ymin)))
+                f.writelines(str(ymin))
                 f.writelines("\t")
-                f.writelines(str(int(x_right[i])))
+                f.writelines(str(x_right[i]))
                 f.writelines("\t")
-                f.writelines(str(int(ymax)))
+                f.writelines(str(ymax))
                 f.writelines("\n")
+                # cv.rectangle(re_im, (x_left[i],ymin), (x_right[i],ymax), (255,0,0),1)
+    #             print(class_name[class_index],str(x_left[i]),str(ymin),str( x_right[i]),str(ymax))
+    # cv.imshow('22', re_im)
+    # cv.waitKey()
+
