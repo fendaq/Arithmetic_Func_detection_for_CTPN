@@ -150,22 +150,21 @@ class SolverWrapper(object):
 
             # get one batch
             blobs = data_layer.forward()
-            #print('blob 12111111111111111111',blobs['gt_boxes'].shape)
-            # print("blobs['gt_ishard']",blobs['gt_ishard'])
-            # print('-------------------------------------------')
-            #print("blobs['data'] ", len(np.where(blobs['data'][0,:,:,0]!=152.0199)),blobs['data'])
 
-            img = blobs['data'][0, :, :, :]
-            print('img shape ', img.shape)
-            print('blobs[gt_boxes]',blobs['gt_boxes'].shape)
-
-            for bbox in blobs['gt_boxes']:
-                cv2.rectangle(img, (bbox[0],bbox[1]),(bbox[2],bbox[3]),(255,0,0))
-
-            cv2.imshow('dd', img)
-            cv2.waitKey()
-
-            assert 0, 'dwad'
+            # img = blobs['data'][0, :, :, :]
+            # print('img shape ', img.shape)
+            # print('blobs[gt_boxes]',blobs['gt_boxes'].shape)
+            #
+            # for bbox in blobs['gt_boxes']:
+            #     if bbox[4] == 1:
+            #         color = (255,0,0)
+            #     elif bbox[4] == 2:
+            #         color = (0,255,0)
+            #     cv2.rectangle(img, (bbox[0],bbox[1]),(bbox[2],bbox[3]),color)
+            #
+            # cv2.imshow('dd', img)
+            # cv2.waitKey()
+            # assert 0, 'dwad'
 
             feed_dict={
                 self.net.data: blobs['data'],

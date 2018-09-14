@@ -31,15 +31,15 @@ if __name__ == '__main__':
     device_name = '/gpu:0'
     # print(device_name)
 
-    img = cv2.imread(roidb[0]['image'])
+    # img = cv2.imread(roidb[0]['image'])
     # print(roidb[0]['image'])
-    for box in roidb[0]['boxes']:
-        # print(box[0],box[1],box[2],box[3])
-        cv2.rectangle(img, (box[0],box[1]),(box[2],box[3]),(255,0,0))
-
-    cv2.imshow('w', img)
-    cv2.waitKey()
-    assert 0,'dwa'
+    # for box in roidb[0]['boxes']:
+    #     # print(box[0],box[1],box[2],box[3])
+    #     cv2.rectangle(img, (box[0],box[1]),(box[2],box[3]),(255,0,0))
+    #
+    # cv2.imshow('w', img)
+    # cv2.waitKey()
+    # assert 0,'dwa'
 
     network = get_network('VGGnet_train')
 

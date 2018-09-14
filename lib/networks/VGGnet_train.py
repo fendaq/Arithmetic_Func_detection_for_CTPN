@@ -43,7 +43,7 @@ class VGGnet_train(Network):
              .conv(3, 3, 512, 1, 1, name='conv5_1')
              .conv(3, 3, 512, 1, 1, name='conv5_2')
              .conv(3, 3, 512, 1, 1, name='conv5_3'))
-        #========= RPN ============
+        #　========= RPN ============
         (self.feed('conv5_3')
              .conv(3,3,512,1,1,name='rpn_conv/3x3'))
 
