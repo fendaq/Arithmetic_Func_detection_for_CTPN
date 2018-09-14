@@ -4,6 +4,8 @@
 
 # model
 checkpoints
+checkpoint
+*ckpt*
 *.pb
 *.npy
 
