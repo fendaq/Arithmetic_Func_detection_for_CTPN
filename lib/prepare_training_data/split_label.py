@@ -41,10 +41,19 @@ for file in files:
 
     for bbox in bbox_list:
 
-        xmin = int(float(bbox[0])/img_size[0] * re_size[0])
-        ymin = int(float(bbox[1])/img_size[1] * re_size[1])
-        xmax = int(float(bbox[2])/img_size[0] * re_size[0])
-        ymax = int(float(bbox[3])/img_size[1] * re_size[1])
+        if len(bbox) == 8:
+            xmin = int(float(min(bbox[0], bbox[2], bbox[4], bbox[6])) / img_size[0] * re_size[0])
+            ymin = int(float(min(bbox[1], bbox[3], bbox[5], bbox[7])) / img_size[1] * re_size[1])
+            xmax = int(float(max(bbox[0], bbox[2], bbox[4], bbox[6])) / img_size[0] * re_size[0])
+            ymax = int(float(max(bbox[1], bbox[3], bbox[5], bbox[7])) / img_size[1] * re_size[1])
+        elif len(bbox)==4:
+            xmin = int(float(bbox[0])/img_size[0] * re_size[0])
+            ymin = int(float(bbox[1])/img_size[1] * re_size[1])
+            xmax = int(float(bbox[2])/img_size[0] * re_size[0])
+            ymax = int(float(bbox[3])/img_size[1] * re_size[1])
+        else:
+            print(xml_file)
+            assert 0, "bbox error"
 
         if xmin < 0:
             xmin = 0
@@ -94,7 +103,13 @@ for file in files:
                 f.writelines("\t")
                 f.writelines(str(ymax))
                 f.writelines("\n")
-                # cv.rectangle(re_im, (x_left[i],ymin), (x_right[i],ymax), (255,0,0),1)
-    #             print(class_name[class_index],str(x_left[i]),str(ymin),str( x_right[i]),str(ymax))
-    # cv.imshow('22', re_im)
-    # cv.waitKey()
+
+    #             if 'hs (3)' in img_path:
+    #                 print((x_left[i], ymin), (x_right[i], ymax))
+    #                 # print(str(x_left[i]), str(ymin), str(x_right[i]), str(ymax))
+    #                 cv.rectangle(re_im, (x_left[i],ymin), (x_right[i],ymax), (255,0,0),1)
+    #                 cv.imshow('22', re_im)
+    #                 cv.waitKey()
+    # if 'hs (3)' in img_path:
+    #     cv.imshow('22', re_im)
+    #     cv.waitKey()

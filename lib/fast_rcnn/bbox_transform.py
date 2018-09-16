@@ -16,16 +16,24 @@ def bbox_transform(ex_rois, gt_rois):
         'Invalid boxes found: {} {}'. \
             format(ex_rois[np.argmin(ex_widths), :], ex_rois[np.argmin(ex_heights), :])
 
+
+    # print('gt_rois < 0', np.where(gt_rois))
+    # print(gt_rois[np.where(gt_rois)])
+
     gt_widths = gt_rois[:, 2] - gt_rois[:, 0] + 1.0
     gt_heights = gt_rois[:, 3] - gt_rois[:, 1] + 1.0
     gt_ctr_x = gt_rois[:, 0] + 0.5 * gt_widths
     gt_ctr_y = gt_rois[:, 1] + 0.5 * gt_heights
+
+    # print('gt_widths < 0',np.where(gt_widths < 0))
+    # print('gt_heights < 0',np.where(gt_heights<0))
 
     # warnings.catch_warnings()
     # warnings.filterwarnings('error')
     targets_dx = (gt_ctr_x - ex_ctr_x) / ex_widths
     targets_dy = (gt_ctr_y - ex_ctr_y) / ex_heights
     targets_dw = np.log(gt_widths / ex_widths)
+    #print('gt_heights / ex_heights',ex_heights,gt_heights,gt_heights / ex_heights)
     targets_dh = np.log(gt_heights / ex_heights)
 
     targets = np.vstack(
