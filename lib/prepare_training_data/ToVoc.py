@@ -107,9 +107,9 @@ if __name__ == '__main__':
     _dest_label_dir, _dest_img_dir, _dest_set_dir = build_voc_dirs(_outdir)
     _doncateothers = bool(1)
     for dset in ['train']:
-        _labeldir = 'label_tmp'
-        _imagedir = 're_image'
-        class_sets = ('dontcare', 'handwritten', 'print')
+        _labeldir = 'train_label_tmp'
+        _imagedir = 'train_img_tmp'
+        class_sets = ['dontcare', 'handwritten', 'print']
         class_sets_dict = dict((k, i) for i, k in enumerate(class_sets))
         allclasses = {}
         fs = [open(os.path.join(_dest_set_dir, cls + '_' + dset + '.txt'), 'w') for cls in class_sets]
