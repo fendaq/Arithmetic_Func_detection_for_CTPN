@@ -2,24 +2,33 @@ import os
 import numpy as np
 import math
 import cv2 as cv
+from lib.prepare_training_data.parse_tal_xml import ParseXml
 
-path = '/home/tony/ocr/ocr_dataset/ctpn/ai_data/img'
-gt_path = '/home/tony/ocr/ocr_dataset/ctpn/ai_data/label'
-out_path = 're_image'
+img_dir = '/home/tony/ocr/ocr_dataset/redo-result/img'
+xml_dir = '/home/tony/ocr/ocr_dataset/redo-result/xml'
+
+label_temp_dir = 'redo_label_tmp'
+# res_path = '/home/tony/ocr/ocr_dataset/tal_detec_data_v2/xml/'
+
+out_path = 'redo_image'
+proposal_width = 16.0
+
 class_name = ['dontcare', 'handwritten', 'print']
+
 if not os.path.exists(out_path):
     os.makedirs(out_path)
-files = os.listdir(path)
+files = os.listdir(img_dir)
 files.sort()
-#files=files[:100]
+
 for file in files:
     _, basename = os.path.split(file)
     if basename.lower().split('.')[-1] not in ['jpg', 'png', 'JPG']:
         continue
     stem, ext = os.path.splitext(basename)
-    gt_file = os.path.join(gt_path, stem + '.txt')
-    img_path = os.path.join(path, file)
-    print(img_path)
+    xml_file = os.path.join(xml_dir, stem + '.xml')
+    img_path = os.path.join(img_dir, file)
+    # print(img_path)
+
     img = cv.imread(img_path)
     img_size = img.shape
     im_size_min = np.min(img_size[0:2])
@@ -28,49 +37,32 @@ for file in files:
     im_scale = float(600) / float(im_size_min)
     if np.round(im_scale * im_size_max) > 1200:
         im_scale = float(1200) / float(im_size_max)
+
     # 图像进行resize
     re_im = cv.resize(img, None, None, fx=im_scale, fy=im_scale, interpolation=cv.INTER_LINEAR)
     re_size = re_im.shape
     cv.imwrite(os.path.join(out_path, stem) + '.jpg', re_im)
 
-    with open(gt_file, 'r') as f:
-        lines = f.readlines()
-    for line in lines:
-        splitted_line = line.strip().lower().split(',')
-        # pt_x = np.zeros((4, 1))
-        # pt_y = np.zeros((4, 1))
-        # pt_x[0, 0] = int(float(splitted_line[0]) / img_size[1] * re_size[1])
-        # pt_y[0, 0] = int(float(splitted_line[1]) / img_size[0] * re_size[0])
-        # pt_x[1, 0] = int(float(splitted_line[2]) / img_size[1] * re_size[1])
-        # pt_y[1, 0] = int(float(splitted_line[3]) / img_size[0] * re_size[0])
-        # pt_x[2, 0] = int(float(splitted_line[4]) / img_size[1] * re_size[1])
-        # pt_y[2, 0] = int(float(splitted_line[5]) / img_size[0] * re_size[0])
-        # pt_x[3, 0] = int(float(splitted_line[6]) / img_size[1] * re_size[1])
-        # pt_y[3, 0] = int(float(splitted_line[7]) / img_size[0] * re_size[0])
-        class_index = int(splitted_line[4])
-        #
-        # ind_x = np.argsort(pt_x, axis=0)
-        # pt_x = pt_x[ind_x]
-        # pt_y = pt_y[ind_x]
-        #
-        # if pt_y[0] < pt_y[1]:
-        #     pt1 = (pt_x[0], pt_y[0])
-        #     pt3 = (pt_x[1], pt_y[1])
-        # else:
-        #     pt1 = (pt_x[1], pt_y[1])
-        #     pt3 = (pt_x[0], pt_y[0])
-        #
-        # if pt_y[2] < pt_y[3]:
-        #     pt2 = (pt_x[2], pt_y[2])
-        #     pt4 = (pt_x[3], pt_y[3])
-        # else:
-        #     pt2 = (pt_x[3], pt_y[3])
-        #     pt4 = (pt_x[2], pt_y[2])
+    parser = ParseXml(xml_file)
+    _, class_list, bbox_list = parser.get_bbox_class()
 
-        xmin = int(float(splitted_line[0])/img_size[0] * re_size[0])
-        ymin = int(float(splitted_line[1])/img_size[1] * re_size[1])
-        xmax = int(float(splitted_line[2])/img_size[0] * re_size[0])
-        ymax = int(float(splitted_line[3])/img_size[1] * re_size[1])
+    assert len(class_list) == len(bbox_list), 'bbox和label不对应'
+
+    for i in range(len(bbox_list)):
+
+        if len(bbox_list[i]) == 8:
+            xmin = int(np.floor(float(min(bbox_list[i][0], bbox_list[i][2], bbox_list[i][4], bbox_list[i][6])) / img_size[0] * re_size[0]))
+            ymin = int(np.floor(float(min(bbox_list[i][1], bbox_list[i][3], bbox_list[i][5], bbox_list[i][7])) / img_size[1] * re_size[1]))
+            xmax = int(np.ceil(float(max(bbox_list[i][0], bbox_list[i][2], bbox_list[i][4], bbox_list[i][6])) / img_size[0] * re_size[0]))
+            ymax = int(np.ceil(float(max(bbox_list[i][1], bbox_list[i][3], bbox_list[i][5], bbox_list[i][7])) / img_size[1] * re_size[1]))
+        elif len(bbox_list[i])==4:
+            xmin = int(np.floor(float(bbox_list[i][0])/img_size[0] * re_size[0]))
+            ymin = int(np.floor(float(bbox_list[i][1])/img_size[1] * re_size[1]))
+            xmax = int(np.ceil(float(bbox_list[i][2])/img_size[0] * re_size[0]))
+            ymax = int(np.ceil(float(bbox_list[i][3])/img_size[1] * re_size[1]))
+        else:
+            print(xml_file)
+            assert 0, "{}bbox error".format(xml_file)
 
         if xmin < 0:
             xmin = 0
@@ -81,11 +73,11 @@ for file in files:
         if ymax > re_size[0] - 1:
             ymax = re_size[0] - 1
 
-        width = xmax - xmin
-        height = ymax - ymin
+        width = xmax - xmin + 1
+        height = ymax - ymin + 1
 
         # TODO proposal 宽度
-        step = 16.0
+        step = proposal_width
         x_left = []
         x_right = []
         x_left.append(xmin)
@@ -106,11 +98,17 @@ for file in files:
         x_left = np.delete(x_left, idx, axis=0)
         x_right = np.delete(x_right, idx, axis=0)
 
-        if not os.path.exists('label_tmp'):
-            os.makedirs('label_tmp')
-        with open(os.path.join('label_tmp', stem) + '.txt', 'a+') as f:
+        if not os.path.exists(label_temp_dir):
+            os.makedirs(label_temp_dir)
+        with open(os.path.join(label_temp_dir, stem) + '.txt', 'a+') as f:
             for i in range(len(x_left)):
-                f.writelines(class_name[class_index])
+                if class_list[i] == 0: # 手写框
+                    f.writelines(class_name[class_list[i]+1])
+                elif class_list[i] == 1: # 打印框
+                    f.writelines(class_name[class_list[i]+1])
+                else:
+                    assert 0, '不该出现其他类型的class:{}'.format(class_list[i])
+
                 f.writelines("\t")
                 f.writelines(str(x_left[i]))
                 f.writelines("\t")
@@ -120,8 +118,13 @@ for file in files:
                 f.writelines("\t")
                 f.writelines(str(ymax))
                 f.writelines("\n")
-                # cv.rectangle(re_im, (x_left[i],ymin), (x_right[i],ymax), (255,0,0),1)
-    #             print(class_name[class_index],str(x_left[i]),str(ymin),str( x_right[i]),str(ymax))
+
+                # if 'hs (3)' in img_path:
+                    #print((x_left[i], ymin), (x_right[i], ymax))
+                    # print(str(x_left[i]), str(ymin), str(x_right[i]), str(ymax))
+    #             cv.rectangle(re_im, (int(x_left[i]),int(ymin)), (int(x_right[i]),int(ymax)), (255,0,0),1)
     # cv.imshow('22', re_im)
     # cv.waitKey()
-
+    # if 'hs (3)' in img_path:
+    #     cv.imshow('22', re_im)
+    #     cv.waitKey()
