@@ -15,7 +15,6 @@ class imdb(object):
         self._image_index = []
         self._obj_proposer = 'selective_search'
         self._roidb = None
-        print(self.default_roidb)
         self._roidb_handler = self.default_roidb
         # Use this dict for storing dataset specific config options
         self.config = {}
@@ -58,8 +57,12 @@ class imdb(object):
         if self._roidb is not None:
             return self._roidb
         self._roidb = self.roidb_handler()
+        # print('self._roidb', self._roidb[0])
         return self._roidb
 
+    @roidb.setter
+    def roddb(self,x):
+        self._roidb = x
     @property
     def cache_path(self):
         cache_path = osp.abspath(osp.join(cfg.DATA_DIR, 'cache'))
@@ -117,6 +120,7 @@ class imdb(object):
         assert len(box_list) == self.num_images, \
                 'Number of boxes must match number of ground-truth images'
         roidb = []
+
         for i in range(self.num_images):
             boxes = box_list[i]
             num_boxes = boxes.shape[0]

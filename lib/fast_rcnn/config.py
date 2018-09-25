@@ -13,7 +13,7 @@ __C.GPU_ID = 0
 # Training options
 __C.IS_RPN = True
 __C.ANCHOR_SCALES = [16]
-__C.NCLASSES = 2
+__C.NCLASSES = 3
 __C.USE_GPU_NMS = True
 # multiscale training and testing
 __C.IS_MULTISCALE = False

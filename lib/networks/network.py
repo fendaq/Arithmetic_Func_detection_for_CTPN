@@ -103,7 +103,6 @@ class Network(object):
             shape = tf.shape(img)
             N, H, W, C = shape[0], shape[1], shape[2], shape[3]
             img = tf.reshape(img, [N * H, W, C])
-            print('dididididi',d_i)
             img.set_shape([None, None, d_i])
 
             lstm_fw_cell = tf.contrib.rnn.LSTMCell(d_h, state_is_tuple=True)
@@ -261,6 +260,8 @@ class Network(object):
     def anchor_target_layer(self, input, _feat_stride, anchor_scales, name):
         if isinstance(input[0], tuple):
             input[0] = input[0][0]
+            print('input size ', input[0])
+
 
         with tf.variable_scope(name) as scope:
             # 'rpn_cls_score', 'gt_boxes', 'gt_ishard', 'dontcare_areas', 'im_info'
@@ -269,8 +270,8 @@ class Network(object):
                            [input[0],input[1],input[2],input[3],input[4], _feat_stride, anchor_scales],
                            [tf.float32,tf.float32,tf.float32,tf.float32])
 
-            rpn_labels = tf.convert_to_tensor(tf.cast(rpn_labels,tf.int32), name = 'rpn_labels') # shape is (1 x H x W x A, 2)
-            rpn_bbox_targets = tf.convert_to_tensor(rpn_bbox_targets, name = 'rpn_bbox_targets') # shape is (1 x H x W x A, 4)
+            rpn_labels = tf.convert_to_tensor(tf.cast(rpn_labels,tf.int32), name = 'rpn_labels') # shape is (1 , H , W ,A)
+            rpn_bbox_targets = tf.convert_to_tensor(rpn_bbox_targets, name = 'rpn_bbox_targets') # shape is (1 , H , W , A * 4)
             rpn_bbox_inside_weights = tf.convert_to_tensor(rpn_bbox_inside_weights , name = 'rpn_bbox_inside_weights') # shape is (1 x H x W x A, 4)
             rpn_bbox_outside_weights = tf.convert_to_tensor(rpn_bbox_outside_weights , name = 'rpn_bbox_outside_weights') # shape is (1 x H x W x A, 4)
 
@@ -406,16 +407,17 @@ class Network(object):
             return tf.square(deltas) * 0.5 * sigma2 * smoothL1_sign + \
                         (deltas_abs - 0.5 / sigma2) * tf.abs(smoothL1_sign - 1)
 
-
-
     def build_loss(self, ohem=False):
-        # classification loss
-        rpn_cls_score = tf.reshape(self.get_output('rpn_cls_score_reshape'), [-1, 2])  # shape (HxWxA, 2)
+        # 3 classification loss
+        # self.get_output('rpn_cls_score_reshape') =
+        # rpn_labels, rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights
+        rpn_cls_score = tf.reshape(self.get_output('rpn_cls_score_reshape'), [-1, cfg.NCLASSES])  # shape (HxWxA, 3)
         rpn_label = tf.reshape(self.get_output('rpn-data')[0], [-1])  # shape (HxWxA)
         # ignore_label(-1)
-        fg_keep = tf.equal(rpn_label, 1)
+        fg_keep = tf.greater_equal(rpn_label, 1)
         rpn_keep = tf.where(tf.not_equal(rpn_label, -1))
-        rpn_cls_score = tf.gather(rpn_cls_score, rpn_keep) # shape (N, 2)
+        # shape = [1, H, WxA, 3]
+        rpn_cls_score = tf.gather(rpn_cls_score, rpn_keep) # shape (N, 3)
         rpn_label = tf.gather(rpn_label, rpn_keep)
         rpn_cross_entropy_n = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=rpn_label,logits=rpn_cls_score)
 
@@ -434,7 +436,6 @@ class Network(object):
 
         rpn_loss_box = tf.reduce_sum(rpn_loss_box_n) / (tf.reduce_sum(tf.cast(fg_keep, tf.float32)) + 1)
         rpn_cross_entropy = tf.reduce_mean(rpn_cross_entropy_n)
-
 
         model_loss = rpn_cross_entropy +  rpn_loss_box
 

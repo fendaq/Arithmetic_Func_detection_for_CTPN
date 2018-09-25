@@ -13,6 +13,7 @@ class RoIDataLayer(object):
 
     def _shuffle_roidb_inds(self):
         """Randomly permute the training roidb."""
+        # 打乱图片顺序
         self._perm = np.random.permutation(np.arange(len(self._roidb)))
         self._cur = 0
 
@@ -50,6 +51,7 @@ class RoIDataLayer(object):
         """
         db_inds = self._get_next_minibatch_inds()
         minibatch_db = [self._roidb[i] for i in db_inds]
+        #print('2222222222222222', minibatch_db[0]['boxes'].shape)
         return get_minibatch(minibatch_db, self._num_classes)
             
     def forward(self):

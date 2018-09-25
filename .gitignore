@@ -4,8 +4,10 @@
 
 # model
 checkpoints
+checkpoint
 *.pb
 *.npy
+*ckpt*
 
 # image
 *.png

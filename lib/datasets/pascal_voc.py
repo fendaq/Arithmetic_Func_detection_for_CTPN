@@ -20,11 +20,9 @@ class pascal_voc(imdb):
                             else devkit_path
         self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year)
         # 设置文本类型 TODO:需要进行改修
-        self._classes = ('__background__', # always index 0
-                         'text')
-        # 将类的类型转为dect,{'pt': 1, 'ht': 2, 'bg': 0}
+        self._classes = ('dontcare', 'handwritten', 'print')
+        # 将类的类型转为dect,{'h': 1, 'p': 2, 'bg': 0}
         self._class_to_ind = dict(list(zip(self.classes, list(range(self.num_classes)))))
-
         self._image_ext = '.jpg'
         self._image_index = self._load_image_set_index()
         # Default to roidb handler
@@ -32,6 +30,7 @@ class pascal_voc(imdb):
         self._roidb_handler = self.gt_roidb
         self._salt = str(uuid.uuid4())
         self._comp_id = 'comp4'
+        #dd = [self._load_pascal_annotation(str(i)) for i in range(200)]
 
         # PASCAL specific config options
         self.config = {'cleanup'     : True,
@@ -163,7 +162,6 @@ class pascal_voc(imdb):
             seg_areas[ix] = (x2 - x1 + 1) * (y2 - y1 + 1)
 
         overlaps = scipy.sparse.csr_matrix(overlaps)
-
         return {'boxes' : boxes,
                 'gt_classes': gt_classes,
                 'gt_ishard': ishards,

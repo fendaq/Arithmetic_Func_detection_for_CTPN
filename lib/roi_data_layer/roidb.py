@@ -24,6 +24,7 @@ def prepare_roidb(imdb):
         max_overlaps = gt_overlaps.max(axis=1)
         # gt class that had the max overlap
         max_classes = gt_overlaps.argmax(axis=1)
+
         roidb[i]['max_classes'] = max_classes
         roidb[i]['max_overlaps'] = max_overlaps
         # sanity checks
@@ -81,10 +82,15 @@ def add_bbox_regression_targets(roidb):
         assert np.min(stds) < 0.01, \
             'Boxes std is too small, std:{}'.format(stds)
 
+
+
+
     print('bbox target means:')
+    # means shape [3,4]=0
     print(means)
     print(means[1:, :].mean(axis=0)) # ignore bg class
     print('bbox target stdevs:')
+    # stdevs shape [3,4] =  [0.1 0.1 0.2 0.2] *3
     print(stds)
     print(stds[1:, :].mean(axis=0)) # ignore bg class
 
@@ -92,6 +98,7 @@ def add_bbox_regression_targets(roidb):
     if cfg.TRAIN.BBOX_NORMALIZE_TARGETS:
         print("Normalizing targets")
         for im_i in range(num_images):
+
             targets = roidb[im_i]['bbox_targets']
             for cls in range(1, num_classes):
                 cls_inds = np.where(targets[:, 0] == cls)[0]
@@ -102,6 +109,9 @@ def add_bbox_regression_targets(roidb):
 
     # These values will be needed for making predictions
     # (the predicts will need to be unnormalized and uncentered)
+
+    #print('bbox_targets', roidb[0]['bbox_targets'], len(roidb[0]['bbox_targets']))
+
     return means.ravel(), stds.ravel()
 
 def _compute_targets(rois, overlaps, labels):

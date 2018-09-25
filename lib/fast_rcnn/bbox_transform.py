@@ -31,6 +31,7 @@ def bbox_transform(ex_rois, gt_rois):
     targets = np.vstack(
         (targets_dx, targets_dy, targets_dw, targets_dh)).transpose()
 
+
     return targets
 
 def bbox_transform_inv(boxes, deltas):

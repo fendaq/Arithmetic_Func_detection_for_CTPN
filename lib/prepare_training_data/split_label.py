@@ -2,23 +2,39 @@ import os
 import numpy as np
 import math
 import cv2 as cv
+from lib.prepare_training_data.parse_tal_xml import ParseXml
 
-path = '/media/D/code/OCR/text-detection-ctpn/data/mlt_english+chinese/image'
-gt_path = '/media/D/code/OCR/text-detection-ctpn/data/mlt_english+chinese/label'
-out_path = 're_image'
+train_img_dir = "/home/tony/ocr/ocr_dataset/ctpn/train_data/img"
+train_xml_dir = "/home/tony/ocr/ocr_dataset/ctpn/train_data/xml"
+
+val_img_dir = "/home/tony/ocr/ocr_dataset/ctpn/val_data/img"
+val_xml_dir = "/home/tony/ocr/ocr_dataset/ctpn/val_data/xml"
+
+img_dir = train_img_dir
+xml_dir = train_xml_dir
+
+
+label_temp_dir = 'train_label_tmp'
+out_path = 'train_img_tmp'
+
+proposal_width = 16.0
+
+class_name = ['dontcare', 'handwritten', 'print']
+
 if not os.path.exists(out_path):
     os.makedirs(out_path)
-files = os.listdir(path)
+files = os.listdir(img_dir)
 files.sort()
-#files=files[:100]
+
 for file in files:
     _, basename = os.path.split(file)
-    if basename.lower().split('.')[-1] not in ['jpg', 'png']:
+    if basename.lower().split('.')[-1] not in ['jpg', 'png', 'JPG']:
         continue
     stem, ext = os.path.splitext(basename)
-    gt_file = os.path.join(gt_path, 'gt_' + stem + '.txt')
-    img_path = os.path.join(path, file)
-    print(img_path)
+    xml_file = os.path.join(xml_dir, stem + '.xml')
+    img_path = os.path.join(img_dir, file)
+    # print(img_path)
+
     img = cv.imread(img_path)
     img_size = img.shape
     im_size_min = np.min(img_size[0:2])
@@ -27,48 +43,32 @@ for file in files:
     im_scale = float(600) / float(im_size_min)
     if np.round(im_scale * im_size_max) > 1200:
         im_scale = float(1200) / float(im_size_max)
+
     # 图像进行resize
     re_im = cv.resize(img, None, None, fx=im_scale, fy=im_scale, interpolation=cv.INTER_LINEAR)
     re_size = re_im.shape
     cv.imwrite(os.path.join(out_path, stem) + '.jpg', re_im)
 
-    with open(gt_file, 'r') as f:
-        lines = f.readlines()
-    for line in lines:
-        splitted_line = line.strip().lower().split(',')
-        pt_x = np.zeros((4, 1))
-        pt_y = np.zeros((4, 1))
-        pt_x[0, 0] = int(float(splitted_line[0]) / img_size[1] * re_size[1])
-        pt_y[0, 0] = int(float(splitted_line[1]) / img_size[0] * re_size[0])
-        pt_x[1, 0] = int(float(splitted_line[2]) / img_size[1] * re_size[1])
-        pt_y[1, 0] = int(float(splitted_line[3]) / img_size[0] * re_size[0])
-        pt_x[2, 0] = int(float(splitted_line[4]) / img_size[1] * re_size[1])
-        pt_y[2, 0] = int(float(splitted_line[5]) / img_size[0] * re_size[0])
-        pt_x[3, 0] = int(float(splitted_line[6]) / img_size[1] * re_size[1])
-        pt_y[3, 0] = int(float(splitted_line[7]) / img_size[0] * re_size[0])
+    parser = ParseXml(xml_file)
+    _, class_list, bbox_list = parser.get_bbox_class()
 
-        ind_x = np.argsort(pt_x, axis=0)
-        pt_x = pt_x[ind_x]
-        pt_y = pt_y[ind_x]
+    assert len(class_list) == len(bbox_list), 'bbox和label不对应'
 
-        if pt_y[0] < pt_y[1]:
-            pt1 = (pt_x[0], pt_y[0])
-            pt3 = (pt_x[1], pt_y[1])
+    for bbox_index in range(len(bbox_list)):
+
+        if len(bbox_list[bbox_index]) == 8:
+            xmin = int(np.floor(float(min(bbox_list[bbox_index][0], bbox_list[bbox_index][2], bbox_list[bbox_index][4], bbox_list[bbox_index][6])) / img_size[0] * re_size[0]))
+            ymin = int(np.floor(float(min(bbox_list[bbox_index][1], bbox_list[bbox_index][3], bbox_list[bbox_index][5], bbox_list[bbox_index][7])) / img_size[1] * re_size[1]))
+            xmax = int(np.ceil(float(max(bbox_list[bbox_index][0], bbox_list[bbox_index][2], bbox_list[bbox_index][4], bbox_list[bbox_index][6])) / img_size[0] * re_size[0]))
+            ymax = int(np.ceil(float(max(bbox_list[bbox_index][1], bbox_list[bbox_index][3], bbox_list[bbox_index][5], bbox_list[bbox_index][7])) / img_size[1] * re_size[1]))
+        elif len(bbox_list[bbox_index])==4:
+            xmin = int(np.floor(float(bbox_list[bbox_index][0])/img_size[0] * re_size[0]))
+            ymin = int(np.floor(float(bbox_list[bbox_index][1])/img_size[1] * re_size[1]))
+            xmax = int(np.ceil(float(bbox_list[bbox_index][2])/img_size[0] * re_size[0]))
+            ymax = int(np.ceil(float(bbox_list[bbox_index][3])/img_size[1] * re_size[1]))
         else:
-            pt1 = (pt_x[1], pt_y[1])
-            pt3 = (pt_x[0], pt_y[0])
-
-        if pt_y[2] < pt_y[3]:
-            pt2 = (pt_x[2], pt_y[2])
-            pt4 = (pt_x[3], pt_y[3])
-        else:
-            pt2 = (pt_x[3], pt_y[3])
-            pt4 = (pt_x[2], pt_y[2])
-
-        xmin = int(min(pt1[0], pt2[0]))
-        ymin = int(min(pt1[1], pt2[1]))
-        xmax = int(max(pt2[0], pt4[0]))
-        ymax = int(max(pt3[1], pt4[1]))
+            print(xml_file)
+            assert 0, "{}bbox error".format(xml_file)
 
         if xmin < 0:
             xmin = 0
@@ -79,11 +79,11 @@ for file in files:
         if ymax > re_size[0] - 1:
             ymax = re_size[0] - 1
 
-        width = xmax - xmin
-        height = ymax - ymin
+        width = xmax - xmin + 1
+        height = ymax - ymin + 1
 
-        # reimplement
-        step = 16.0
+        # TODO proposal 宽度
+        step = proposal_width
         x_left = []
         x_right = []
         x_left.append(xmin)
@@ -104,16 +104,37 @@ for file in files:
         x_left = np.delete(x_left, idx, axis=0)
         x_right = np.delete(x_right, idx, axis=0)
 
-        if not os.path.exists('label_tmp'):
-            os.makedirs('label_tmp')
-        with open(os.path.join('label_tmp', stem) + '.txt', 'a') as f:
+        if not os.path.exists(label_temp_dir):
+            os.makedirs(label_temp_dir)
+
+        if class_list[bbox_index] == 0:  # 手写框
+            current_class = class_name[class_list[bbox_index] + 1]
+            color = (255, 0, 0)
+        elif class_list[bbox_index] == 1:  # 打印框
+            current_class = class_name[class_list[bbox_index] + 1]
+            color = (0, 255, 0)
+        else:
+            assert 0, '不该出现其他类型的class:{}'.format(class_list[bbox_index])
+
+        with open(os.path.join(label_temp_dir, stem) + '.txt', 'a+') as f:
             for i in range(len(x_left)):
-                f.writelines("text\t")
-                f.writelines(str(int(x_left[i])))
+                f.writelines(current_class)
                 f.writelines("\t")
-                f.writelines(str(int(ymin)))
+                f.writelines(str(x_left[i]))
                 f.writelines("\t")
-                f.writelines(str(int(x_right[i])))
+                f.writelines(str(ymin))
                 f.writelines("\t")
-                f.writelines(str(int(ymax)))
+                f.writelines(str(x_right[i]))
+                f.writelines("\t")
+                f.writelines(str(ymax))
                 f.writelines("\n")
+
+                # if 'hs (3)' in img_path:
+                    #print((x_left[i], ymin), (x_right[i], ymax))
+                    # print(str(x_left[i]), str(ymin), str(x_right[i]), str(ymax))
+    #             cv.rectangle(re_im, (int(x_left[i]),int(ymin)), (int(x_right[i]),int(ymax)), color,1)
+    # cv.imshow('22', re_im)
+    # cv.waitKey()
+    # if 'hs (3)' in img_path:
+    #     cv.imshow('22', re_im)
+    #     cv.waitKey()
