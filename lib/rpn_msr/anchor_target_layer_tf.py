@@ -92,7 +92,7 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, gt_ishard, dontcare_areas, im_i
 
     #至此，anchor准备好了
     #--------------------------------------------------------------
-    # label:1 is prostive, 0 is negative, -1 is dont care
+    # label:>=1 is prostive, 0 is negative, -1 is dont care
     # (A)
     labels = np.empty((len(inds_inside), ), dtype=np.float32)
     labels.fill(-1)#初始化label，均为-1
@@ -135,7 +135,7 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, gt_ishard, dontcare_areas, im_i
     labels[gt_argmax_overlaps] = gt_boxes[:, 4] # 每个位置上的10个anchor中overlap最大的认为是前景
     # print('gt_boxes[gt_argmax_overlaps, 4]', gt_boxes[argmax_overlaps[gt_argmax_overlaps], 4])
     # fg label: above threshold IOU
-    max_iou_pp = max_overlaps >= cfg.TRAIN.RPN_POSITIVE_OVERLAP
+    max_iou_pp = max_overlaps >= cfg.TRAIN.RPN_POSITIVE_OVERLAP # 0.7
     labels[max_iou_pp] = gt_boxes[argmax_overlaps[max_iou_pp], 4]#overlap大于0.7的认为是前景
     # print('labels', labels)
 
@@ -191,7 +191,7 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, gt_ishard, dontcare_areas, im_i
         positive_weights = (cfg.TRAIN.RPN_POSITIVE_WEIGHT /
                             (np.sum(labels >= 1)) + 1)
         negative_weights = ((1.0 - cfg.TRAIN.RPN_POSITIVE_WEIGHT) /
-                            (np.sum(labels >= 0)) + 1)
+                            (np.sum(labels == 0)) + 1)
     bbox_outside_weights[labels >= 1, :] = positive_weights#外部权重，前景是1，背景是0
     bbox_outside_weights[labels == 0, :] = negative_weights
 

@@ -57,7 +57,7 @@ class VGGnet_train(Network):
         (self.feed('rpn_cls_score', 'gt_boxes', 'gt_ishard', 'dontcare_areas', 'im_info')
              .anchor_target_layer(_feat_stride, anchor_scales, name = 'rpn-data' ))
 
-        # shape is (1, H, W, Ax2) -> (1, H, WxA, 2)
+        # shape is (1, H, W, Ax3) -> (1, H, WxA, 3)
         # 给之前得到的score进行softmax，得到0-1之间的得分
         (self.feed('rpn_cls_score')
              .spatial_reshape_layer(cfg.NCLASSES, name = 'rpn_cls_score_reshape')
