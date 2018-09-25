@@ -437,7 +437,6 @@ class Network(object):
         rpn_loss_box = tf.reduce_sum(rpn_loss_box_n) / (tf.reduce_sum(tf.cast(fg_keep, tf.float32)) + 1)
         rpn_cross_entropy = tf.reduce_mean(rpn_cross_entropy_n)
 
-
         model_loss = rpn_cross_entropy +  rpn_loss_box
 
         regularization_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)

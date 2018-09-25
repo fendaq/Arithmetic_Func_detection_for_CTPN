@@ -89,8 +89,8 @@ class SolverWrapper(object):
         tf.summary.scalar('total_loss', total_loss)
         summary_op = tf.summary.merge_all()
 
-        log_image, log_image_data, log_image_name =\
-            self.build_image_summary()
+        # log_image, log_image_data, log_image_name =\
+        #     self.build_image_summary()
 
         # optimizer
         lr = tf.Variable(cfg.TRAIN.LEARNING_RATE, trainable=False)
