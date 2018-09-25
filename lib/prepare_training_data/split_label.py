@@ -4,13 +4,19 @@ import math
 import cv2 as cv
 from lib.prepare_training_data.parse_tal_xml import ParseXml
 
-img_dir = '/home/tony/ocr/ocr_dataset/redo-result/img'
-xml_dir = '/home/tony/ocr/ocr_dataset/redo-result/xml'
+train_img_dir = "/home/tony/ocr/ocr_dataset/ctpn/train_data/img"
+train_xml_dir = "/home/tony/ocr/ocr_dataset/ctpn/train_data/xml"
 
-label_temp_dir = 'redo_label_tmp'
-# res_path = '/home/tony/ocr/ocr_dataset/tal_detec_data_v2/xml/'
+val_img_dir = "/home/tony/ocr/ocr_dataset/ctpn/val_data/img"
+val_xml_dir = "/home/tony/ocr/ocr_dataset/ctpn/val_data/xml"
 
-out_path = 'redo_image'
+img_dir = train_img_dir
+xml_dir = train_xml_dir
+
+
+label_temp_dir = 'train_label_tmp'
+out_path = 'train_img_tmp'
+
 proposal_width = 16.0
 
 class_name = ['dontcare', 'handwritten', 'print']
@@ -48,18 +54,18 @@ for file in files:
 
     assert len(class_list) == len(bbox_list), 'bbox和label不对应'
 
-    for i in range(len(bbox_list)):
+    for bbox_index in range(len(bbox_list)):
 
-        if len(bbox_list[i]) == 8:
-            xmin = int(np.floor(float(min(bbox_list[i][0], bbox_list[i][2], bbox_list[i][4], bbox_list[i][6])) / img_size[0] * re_size[0]))
-            ymin = int(np.floor(float(min(bbox_list[i][1], bbox_list[i][3], bbox_list[i][5], bbox_list[i][7])) / img_size[1] * re_size[1]))
-            xmax = int(np.ceil(float(max(bbox_list[i][0], bbox_list[i][2], bbox_list[i][4], bbox_list[i][6])) / img_size[0] * re_size[0]))
-            ymax = int(np.ceil(float(max(bbox_list[i][1], bbox_list[i][3], bbox_list[i][5], bbox_list[i][7])) / img_size[1] * re_size[1]))
-        elif len(bbox_list[i])==4:
-            xmin = int(np.floor(float(bbox_list[i][0])/img_size[0] * re_size[0]))
-            ymin = int(np.floor(float(bbox_list[i][1])/img_size[1] * re_size[1]))
-            xmax = int(np.ceil(float(bbox_list[i][2])/img_size[0] * re_size[0]))
-            ymax = int(np.ceil(float(bbox_list[i][3])/img_size[1] * re_size[1]))
+        if len(bbox_list[bbox_index]) == 8:
+            xmin = int(np.floor(float(min(bbox_list[bbox_index][0], bbox_list[bbox_index][2], bbox_list[bbox_index][4], bbox_list[bbox_index][6])) / img_size[0] * re_size[0]))
+            ymin = int(np.floor(float(min(bbox_list[bbox_index][1], bbox_list[bbox_index][3], bbox_list[bbox_index][5], bbox_list[bbox_index][7])) / img_size[1] * re_size[1]))
+            xmax = int(np.ceil(float(max(bbox_list[bbox_index][0], bbox_list[bbox_index][2], bbox_list[bbox_index][4], bbox_list[bbox_index][6])) / img_size[0] * re_size[0]))
+            ymax = int(np.ceil(float(max(bbox_list[bbox_index][1], bbox_list[bbox_index][3], bbox_list[bbox_index][5], bbox_list[bbox_index][7])) / img_size[1] * re_size[1]))
+        elif len(bbox_list[bbox_index])==4:
+            xmin = int(np.floor(float(bbox_list[bbox_index][0])/img_size[0] * re_size[0]))
+            ymin = int(np.floor(float(bbox_list[bbox_index][1])/img_size[1] * re_size[1]))
+            xmax = int(np.ceil(float(bbox_list[bbox_index][2])/img_size[0] * re_size[0]))
+            ymax = int(np.ceil(float(bbox_list[bbox_index][3])/img_size[1] * re_size[1]))
         else:
             print(xml_file)
             assert 0, "{}bbox error".format(xml_file)
@@ -100,15 +106,19 @@ for file in files:
 
         if not os.path.exists(label_temp_dir):
             os.makedirs(label_temp_dir)
+
+        if class_list[bbox_index] == 0:  # 手写框
+            current_class = class_name[class_list[bbox_index] + 1]
+            color = (255, 0, 0)
+        elif class_list[bbox_index] == 1:  # 打印框
+            current_class = class_name[class_list[bbox_index] + 1]
+            color = (0, 255, 0)
+        else:
+            assert 0, '不该出现其他类型的class:{}'.format(class_list[bbox_index])
+
         with open(os.path.join(label_temp_dir, stem) + '.txt', 'a+') as f:
             for i in range(len(x_left)):
-                if class_list[i] == 0: # 手写框
-                    f.writelines(class_name[class_list[i]+1])
-                elif class_list[i] == 1: # 打印框
-                    f.writelines(class_name[class_list[i]+1])
-                else:
-                    assert 0, '不该出现其他类型的class:{}'.format(class_list[i])
-
+                f.writelines(current_class)
                 f.writelines("\t")
                 f.writelines(str(x_left[i]))
                 f.writelines("\t")
@@ -122,7 +132,7 @@ for file in files:
                 # if 'hs (3)' in img_path:
                     #print((x_left[i], ymin), (x_right[i], ymax))
                     # print(str(x_left[i]), str(ymin), str(x_right[i]), str(ymax))
-    #             cv.rectangle(re_im, (int(x_left[i]),int(ymin)), (int(x_right[i]),int(ymax)), (255,0,0),1)
+    #             cv.rectangle(re_im, (int(x_left[i]),int(ymin)), (int(x_right[i]),int(ymax)), color,1)
     # cv.imshow('22', re_im)
     # cv.waitKey()
     # if 'hs (3)' in img_path:
