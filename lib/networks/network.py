@@ -414,9 +414,10 @@ class Network(object):
         rpn_cls_score = tf.reshape(self.get_output('rpn_cls_score_reshape'), [-1, cfg.NCLASSES])  # shape (HxWxA, 3)
         rpn_label = tf.reshape(self.get_output('rpn-data')[0], [-1])  # shape (HxWxA)
         # ignore_label(-1)
-        fg_keep = tf.equal(rpn_label, 1)
+        fg_keep = tf.greater_equal(rpn_label, 1)
         rpn_keep = tf.where(tf.not_equal(rpn_label, -1))
-        rpn_cls_score = tf.gather(rpn_cls_score, rpn_keep) # shape (N, cfg.NCLASSES)
+        # shape = [1, H, WxA, 3]
+        rpn_cls_score = tf.gather(rpn_cls_score, rpn_keep) # shape (N, 3)
         rpn_label = tf.gather(rpn_label, rpn_keep)
         rpn_cross_entropy_n = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=rpn_label,logits=rpn_cls_score)
 

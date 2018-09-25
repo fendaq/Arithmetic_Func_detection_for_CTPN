@@ -81,7 +81,7 @@ class SolverWrapper(object):
     def train_model(self, sess, max_iters, restore=False):
         """Network training loop."""
         data_layer = get_data_layer(self.roidb, self.imdb.num_classes)
-        total_loss,model_loss, rpn_cross_entropy, rpn_loss_box=self.net.build_loss(ohem=cfg.TRAIN.OHEM)
+        total_loss, model_loss, rpn_cross_entropy, rpn_loss_box=self.net.build_loss(ohem=cfg.TRAIN.OHEM)
         # scalar summary
         tf.summary.scalar('rpn_reg_loss', rpn_loss_box)
         tf.summary.scalar('rpn_cls_loss', rpn_cross_entropy)

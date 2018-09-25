@@ -247,10 +247,10 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, gt_ishard, dontcare_areas, im_i
 
     # rpn_bbox_targets shape [1, 37, 40, 40]
     # rpn_labels (1, 37, 40, 10)
-    # print('rpn_labels >0', len(np.where(rpn_labels > 0)[0]))
-    # print('rpn_labels =0', len(np.where(rpn_labels == 0)[0]))
-    # print('rpn_labels =1', len(np.where(rpn_labels == 1)[0]))
-    # print('rpn_labels', rpn_labels[0][23][23][:])
+    # print('rpn_labels 0 num', len(np.where(rpn_labels[0]==0)[2]))
+    # print('rpn_labels 1 num', len(np.where(rpn_labels[0]==1)[2]))
+    # print('rpn_labels 2 num', len(np.where(rpn_labels[0]==2)[2]))
+
 
     return rpn_labels, rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights
 
