@@ -20,8 +20,7 @@ class pascal_voc(imdb):
                             else devkit_path
         self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year)
         # 设置文本类型 TODO:需要进行改修
-        self._classes = ('__background__', # always index 0
-                         'handwritten', 'print')
+        self._classes = ('dontcare', 'handwritten', 'print')
         # 将类的类型转为dect,{'h': 1, 'p': 2, 'bg': 0}
         self._class_to_ind = dict(list(zip(self.classes, list(range(self.num_classes)))))
         self._image_ext = '.jpg'

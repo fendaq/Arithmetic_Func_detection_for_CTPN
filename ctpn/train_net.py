@@ -33,9 +33,14 @@ if __name__ == '__main__':
 
     # img = cv2.imread(roidb[0]['image'])
     # print(roidb[0]['image'])
-    # for box in roidb[0]['boxes']:
-    #     # print(box[0],box[1],box[2],box[3])
-    #     cv2.rectangle(img, (box[0],box[1]),(box[2],box[3]),(255,0,0))
+    # for box_index in range(len(roidb[0]['boxes'])):
+    #     # print(box[0],box[1],box[2],box[3])gt_classes
+    #     if roidb[0]['gt_classes'][box_index] == 1:
+    #         color = (255, 0, 0)
+    #     else:
+    #         color = (0, 255, 0)
+    #     cv2.rectangle(img, (roidb[0]['boxes'][box_index][0],roidb[0]['boxes'][box_index][1]),
+    #                        (roidb[0]['boxes'][box_index][2],roidb[0]['boxes'][box_index][3]),color)
     #
     # cv2.imshow('w', img)
     # cv2.waitKey()
