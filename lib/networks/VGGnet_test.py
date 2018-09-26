@@ -42,33 +42,17 @@ class VGGnet_test(Network):
         (self.feed('rpn_conv/3x3').Bilstm(512, 128, 512, name='lstm_o'))
         # lstm_o shape = [N, H, W, d_o]
         (self.feed('lstm_o').lstm_fc(512, len(anchor_scales) * 10 * 4, name='rpn_bbox_pred'))
-        (self.feed('lstm_o').lstm_fc(512, len(anchor_scales) * 10 * 2, name='rpn_cls_score'))
+        (self.feed('lstm_o').lstm_fc(512, len(anchor_scales) * 10 * cfg.NCLASSES, name='rpn_cls_score'))
 
-        #  shape is (1, H, W, Ax2) -> (1, H, WxA, 2)
-        # 最后的2为分类概率
+        #  shape is (1, H, W, Ax3) -> (1, H, WxA, 3)
+        # 最后的cfg.NCLASSES为分类概率
         (self.feed('rpn_cls_score')
-         .spatial_reshape_layer(2, name='rpn_cls_score_reshape')
+         .spatial_reshape_layer(cfg.NCLASSES, name='rpn_cls_score_reshape')
          .spatial_softmax(name='rpn_cls_prob'))
 
-        # shape is (1, H, WxA, 2) -> (1, H, W, Ax2)
+        # shape is (1, H, WxA, 3) -> (1, H, W, Ax2)
         (self.feed('rpn_cls_prob')
-         .spatial_reshape_layer(len(anchor_scales) * 10 * 2, name='rpn_cls_prob_reshape'))
+         .spatial_reshape_layer(len(anchor_scales) * 10 * cfg.NCLASSES, name='rpn_cls_prob_reshape'))
 
         (self.feed('rpn_cls_prob_reshape', 'rpn_bbox_pred', 'im_info')
          .proposal_layer(_feat_stride, anchor_scales, 'TEST', name='rois'))
-
-def my_func(in_2):
-    a = np.reshape(in_2, [-1,2])
-    print(a)
-    print('?????')
-    return a
-
-if __name__ == "__main__":
-    # a = tf.constant([2,3,4,5,6,7,8,3])
-    # b = tf.py_func(my_func,[a],tf.float16)
-    # sess = tf.Session()
-    # c = sess.run(b)
-    # print(c)
-    a = np.zeros((1, 10, 4))
-    b = np.zeros((185, 1, 4))
-    print(np.shape(a*b))
