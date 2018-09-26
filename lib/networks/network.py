@@ -242,8 +242,12 @@ class Network(object):
         """
         if isinstance(input[0], tuple):
             input[0] = input[0][0]
-            # input[0] shape is (1, H, W, Ax2)
+            # input[0] shape is (1, H, W, Ax3)
             # rpn_rois <- (1 x H x W x A, 5) [0, x1, y1, x2, y2]
+
+            # 'rpn_cls_prob_reshape', (1, H, W, Ax3)
+            # 'rpn_bbox_pred', [N, H, W, Ax4]
+            # 'im_info'
         with tf.variable_scope(name) as scope:
             blob,bbox_delta = tf.py_func(proposal_layer_py,[input[0],input[1],input[2], cfg_key, _feat_stride, anchor_scales],\
                                      [tf.float32,tf.float32])
