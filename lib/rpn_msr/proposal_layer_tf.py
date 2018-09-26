@@ -15,8 +15,7 @@ def proposal_layer(rpn_cls_prob_reshape, rpn_bbox_pred, im_info, cfg_key, _feat_
     """
     Parameters
     ----------
-    rpn_cls_prob_reshape: (1 , H , W , Ax2) outputs of RPN, prob of bg or fg
-                         NOTICE: the old version is ordered by (1, H, W, 2, A) !!!!
+    rpn_cls_prob_reshape: (1 , H , W , Ax3)
     rpn_bbox_pred: (1 , H , W , Ax4), rgs boxes output of RPN
     im_info: a list of [image_height, image_width, scale_ratios]
     cfg_key: 'TRAIN' or 'TEST'
@@ -26,20 +25,6 @@ def proposal_layer(rpn_cls_prob_reshape, rpn_bbox_pred, im_info, cfg_key, _feat_
     Returns
     ----------
     rpn_rois : (1 x H x W x A, 5) e.g. [0, x1, y1, x2, y2]
-
-    # Algorithm:
-    #
-    # for each (H, W) location i
-    #   generate A anchor boxes centered on cell i
-    #   apply predicted bbox deltas at cell i to each of the A anchors
-    # clip predicted boxes to image
-    # remove predicted boxes with either height or width < threshold
-    # sort all (proposal, score) pairs by score from highest to lowest
-    # take top pre_nms_topN proposals before NMS
-    # apply NMS with threshold 0.7 to remaining proposals
-    # take after_nms_topN proposals after NMS
-    # return the top proposals (-> RoIs top, scores top)
-    #layer_params = yaml.load(self.param_str_)
 
     """
     cfg_key=cfg_key.decode('ascii')
@@ -66,28 +51,28 @@ def proposal_layer(rpn_cls_prob_reshape, rpn_bbox_pred, im_info, cfg_key, _feat_
     post_nms_topN = cfg[cfg_key].RPN_POST_NMS_TOP_N#2000，做完nms之后，最多保留的box的数目
     nms_thresh    = cfg[cfg_key].RPN_NMS_THRESH#nms用参数，阈值是0.7
     min_size      = cfg[cfg_key].RPN_MIN_SIZE#候选box的最小尺寸，目前是16，高宽均要大于16
-    # (1, H, W, Ax3)
+
     height, width = rpn_cls_prob_reshape.shape[1:3]#feature-map的高宽
 
     # the first set of _num_anchors channels are bg probs
     # the second set are the fg probs, which we want
     # (1, H, W, A)
     # 获取第一个分类结果
-    scores = np.reshape(np.reshape(rpn_cls_prob_reshape, [1, height, width, _num_anchors, 2])[:,:,:,:,1],
-                        [1, height, width, _num_anchors])
+    # scores = np.reshape(np.reshape(rpn_cls_prob_reshape, [1, height, width, _num_anchors, cfg.NCLASSES])[:,:,:,:,1],
+    #                     [1, height, width, _num_anchors])
+
+    # anchor_max_socres shape = [1,h,w,10]. 存储最大的得分
+    anchor_max_socres = np.max(np.reshape(rpn_cls_prob_reshape, [1, height, width, _num_anchors, cfg.NCLASSES]),axis=4)
+    # anchor_class shape = [1,h,w,10]， 最大得分的类
+    anchor_class = np.argmax(np.reshape(rpn_cls_prob_reshape, [1, height, width, _num_anchors, cfg.NCLASSES]),axis=4)
+
+    print('anchor_max_socres', anchor_max_socres.shape)
+    print('anchor_class', anchor_class.shape)
+
     #提取到object的分数，non-object的我们不关心
     #并reshape到1*H*W*10
 
     bbox_deltas = rpn_bbox_pred#模型输出的pred是相对值，需要进一步处理成真实图像中的坐标
-    #im_info = bottom[2].data[0, :]
-
-    if DEBUG:
-        print('im_size: ({}, {})'.format(im_info[0], im_info[1]))
-        print('scale: {}'.format(im_info[2]))
-
-    # 1. Generate proposals from bbox deltas and shifted anchors
-    if DEBUG:
-        print('score map size: {}'.format(scores.shape))
 
     # Enumerate all shifts
     # 同anchor-target-layer-tf这个文件一样，生成anchor的shift，进一步得到整张图像上的所有anchor
@@ -118,7 +103,6 @@ def proposal_layer(rpn_cls_prob_reshape, rpn_bbox_pred, im_info, cfg_key, _feat_
     # print('_anchors.reshape((1, A, 4))',np.shape(_anchors.reshape((1, A, 4))))
     # print('shifts.reshape((1, K, 4)).transpose((1, 0, 2))',np.shape(shifts.reshape((1, K, 4)).transpose((1, 0, 2))))
     anchors = anchors.reshape((K * A, 4))#这里得到的anchor就是整张图像上的所有anchor
-    print(anchors)
 
     # Transpose and reshape predicted bbox transformations to get them
     # into the same order as the anchors:
@@ -127,9 +111,6 @@ def proposal_layer(rpn_cls_prob_reshape, rpn_bbox_pred, im_info, cfg_key, _feat_
     # reshape to (1 * H * W * A, 4) where rows are ordered by (h, w, a)
     # in slowest to fastest order
     bbox_deltas = bbox_deltas.reshape((-1, 4)) #(HxWxA, 4)
-
-    # Same story for the scores:
-    scores = scores.reshape((-1, 1))
 
     # Convert anchors into proposals via bbox transformations
     proposals = bbox_transform_inv(anchors, bbox_deltas)#做逆变换，得到box在图像上的真实坐标
@@ -140,9 +121,27 @@ def proposal_layer(rpn_cls_prob_reshape, rpn_bbox_pred, im_info, cfg_key, _feat_
     # 3. remove predicted boxes with either height or width < threshold
     # (NOTE: convert min_size to input image scale stored in im_info[2])
     keep = _filter_boxes(proposals, min_size * im_info[2])#移除那些proposal小于一定尺寸的proposal
+    # (18500, 4)
     proposals = proposals[keep, :]#保留剩下的proposal
-    scores = scores[keep]
+
+    # Same story for the scores:
+    # scores = scores.reshape((-1, 1))
+    # scores = scores[keep]
     bbox_deltas=bbox_deltas[keep,:]
+    print('keep',keep.shape,keep)
+    print('proposals', proposals.shape)
+
+    # 过滤超过边界的anchor
+    anchor_class = anchor_class.reshape((-1, 1))
+    anchor_class = anchor_class[keep]
+    anchor_max_socres = anchor_max_socres.reshape((-1, 1))
+    anchor_max_socres = anchor_max_socres[keep]
+
+    text_filter = np.where(anchor_class>0)[0]
+    print('text_filter1', len(text_filter))
+    anchor_max_socres = anchor_max_socres[text_filter]
+    anchor_class = anchor_class[text_filter]
+    proposals = proposals[text_filter, :]
 
 
     # # remove irregular boxes, too fat too tall
@@ -152,29 +151,54 @@ def proposal_layer(rpn_cls_prob_reshape, rpn_bbox_pred, im_info, cfg_key, _feat_
 
     # 4. sort all (proposal, score) pairs by score from highest to lowest
     # 5. take top pre_nms_topN (e.g. 6000)
-    order = scores.ravel().argsort()[::-1]#score按得分的高低进行排序
-    if pre_nms_topN > 0:                #保留12000个proposal进去做nms
-        order = order[:pre_nms_topN]
-    proposals = proposals[order, :]
-    scores = scores[order]
-    bbox_deltas=bbox_deltas[order,:]
+    # order = scores.ravel().argsort()[::-1]#score按得分的高低进行排序
+    # if pre_nms_topN > 0:                #保留12000个proposal进去做nms
+    #     order = order[:pre_nms_topN]
+    # proposals = proposals[order, :]
+    # scores = scores[order]
+    # bbox_deltas = bbox_deltas[order, :]
 
+    # -----------------------------------------------
+    text_order = anchor_max_socres.ravel().argsort()[::-1]
+    if pre_nms_topN > 0:                #保留12000个proposal进去做nms
+        text_order = text_order[:pre_nms_topN]
+
+
+    proposals = proposals[text_order, :]
+    anchor_max_socres = anchor_max_socres[text_order]
+    anchor_class = anchor_class[text_order]
+    bbox_deltas = bbox_deltas[text_order, :]
+    # print('anchor_max_socres', anchor_max_socres)
+    # print('anchor_class', anchor_class)
 
     # 6. apply nms (e.g. threshold = 0.7)
     # 7. take after_nms_topN (e.g. 300)
     # 8. return the top proposals (-> RoIs top)
-    keep = nms(np.hstack((proposals, scores)), nms_thresh)#进行nms操作，保留2000个proposal
-    if post_nms_topN > 0:
-        keep = keep[:post_nms_topN]
-    proposals = proposals[keep, :]
-    scores = scores[keep]
-    bbox_deltas=bbox_deltas[keep,:]
+    # keep = nms(np.hstack((proposals, scores)), nms_thresh)#进行nms操作，保留2000个proposal
+    # if post_nms_topN > 0:
+    #     keep = keep[:post_nms_topN]
+    # proposals = proposals[keep, :]
+    # scores = scores[keep]
+    # bbox_deltas=bbox_deltas[keep,:]
 
+    # -----------------------------------------------
+    nms_keep = nms(np.hstack((proposals, anchor_max_socres)), nms_thresh)  # 进行nms操作，保留2000个proposal
+    if post_nms_topN > 0:
+        nms_keep = nms_keep[:post_nms_topN]
+
+
+    proposals = proposals[nms_keep, :]
+    anchor_max_socres = anchor_max_socres[nms_keep]
+    anchor_class = anchor_class[nms_keep]
+    bbox_deltas = bbox_deltas[nms_keep, :]
 
     # Output rois blob
     # Our RPN implementation only supports a single input image, so all
     # batch inds are 0
-    blob = np.hstack((scores.astype(np.float32, copy=False), proposals.astype(np.float32, copy=False)))
+    # blob = np.hstack((scores.astype(np.float32, copy=False), proposals.astype(np.float32, copy=False)))
+    blob = np.hstack((anchor_class.astype(np.float32, copy=False),
+                      anchor_max_socres.astype(np.float32, copy=False),
+                      proposals.astype(np.float32, copy=False)))
 
     return blob,bbox_deltas
 
