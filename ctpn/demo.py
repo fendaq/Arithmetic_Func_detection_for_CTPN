@@ -61,29 +61,35 @@ def draw_boxes(img, image_name, boxes, scale):
     cv2.imwrite(os.path.join("data/results", base_name), img)
 
 
-def ctpn(sess, net, image_name):
+def ctpn(sess, net, image_path):
     timer = Timer()
     timer.tic()
 
-    img = cv2.imread(image_name)
+    img = cv2.imread(image_path)
+    img_name = image_path.split('/')[-1]
     # print('111', img.shape)
     #　将图像进行resize并返回其缩放大小
     img, scale = resize_im(img, scale=TextLineCfg.SCALE, max_scale=TextLineCfg.MAX_SCALE)
     # print('222', img.shape)
     # 送入网络得到1000个得分,1000个bbox
-    scores, boxes = test_ctpn(sess, net, img)
+    cls, scores, boxes = test_ctpn(sess, net, img)
 
     # img_re = img
     # for i in range(np.shape(boxes)[0]):
     #     #print(np.shape(boxes))
-    #     cv2.rectangle(img_re, (boxes[i][0],boxes[i][1]),(boxes[i][2],boxes[i][3]),(255,0,0),1)
-    # cv2.imshow('333', img_re)
+    #     if cls[i] == 1:
+    #         color = (255,0,0)
+    #     else:
+    #         color = (0,255,0)
+    #     cv2.rectangle(img_re, (boxes[i][0],boxes[i][1]),(boxes[i][2],boxes[i][3]),color,1)
+    # print(img_name)
+    # cv2.imwrite(img_name, img_re)
     # cv2.waitKey()
     # assert o,'dwa'
 
     textdetector = TextDetector()
     boxes = textdetector.detect(boxes, scores[:, np.newaxis], img.shape[:2])
-    draw_boxes(img, image_name, boxes, scale)
+    draw_boxes(img, image_path, boxes, scale)
     timer.toc()
     print(('Detection took {:.3f}s for '
            '{:d} object proposals').format(timer.total_time, boxes.shape[0]))

@@ -252,7 +252,7 @@ class Network(object):
             blob,bbox_delta = tf.py_func(proposal_layer_py,[input[0],input[1],input[2], cfg_key, _feat_stride, anchor_scales],\
                                      [tf.float32,tf.float32])
 
-            rpn_rois = tf.reshape(blob, [-1, 5], name='rpn_rois')# shape is (1 x H x W x A, 2)
+            rpn_rois = tf.reshape(blob, [-1, 6], name='rpn_rois')# shape is (1 x H x W x A, 2)
             rpn_targets = tf.convert_to_tensor(bbox_delta, name = 'rpn_targets') # shape is (1 x H x W x A, 4)
             self.layers['rpn_rois'] = rpn_rois
             # rpn_targets shape [1000,4]
