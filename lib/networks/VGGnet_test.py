@@ -50,7 +50,7 @@ class VGGnet_test(Network):
          .spatial_reshape_layer(cfg.NCLASSES, name='rpn_cls_score_reshape')
          .spatial_softmax(name='rpn_cls_prob'))
 
-        # shape is (1, H, WxA, 3) -> (1, H, W, Ax2)
+        # shape is (1, H, WxA, 3) -> (1, H, W, Ax3)
         (self.feed('rpn_cls_prob')
          .spatial_reshape_layer(len(anchor_scales) * 10 * cfg.NCLASSES, name='rpn_cls_prob_reshape'))
 

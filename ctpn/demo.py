@@ -66,10 +66,10 @@ def ctpn(sess, net, image_name):
     timer.tic()
 
     img = cv2.imread(image_name)
-    print('111', img.shape)
+    # print('111', img.shape)
     #　将图像进行resize并返回其缩放大小
     img, scale = resize_im(img, scale=TextLineCfg.SCALE, max_scale=TextLineCfg.MAX_SCALE)
-    print('222', img.shape)
+    # print('222', img.shape)
     # 送入网络得到1000个得分,1000个bbox
     scores, boxes = test_ctpn(sess, net, img)
 

@@ -60,7 +60,7 @@ class Network(object):
             if isinstance(layer, str):
                 try:
                     layer = self.layers[layer]
-                    print(layer)
+                    # print(layer)
                 except KeyError:
                     print(list(self.layers.keys()))
                     raise KeyError('Unknown layer name fed: %s'%layer)
