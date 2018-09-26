@@ -30,7 +30,6 @@ def _get_image_blob(im):
                         interpolation=cv2.INTER_LINEAR)
         im_scale_factors.append(im_scale)
         processed_ims.append(im)
-        print('333', im.shape)
     # Create a blob to hold the input images
     blob = im_list_to_blob(processed_ims)
 
@@ -59,9 +58,10 @@ def test_ctpn(sess, net, im, boxes=None):
 
     rois = rois[0]
 
-    scores = rois[:, 0]
+    cls = rois[:, 0]
+    scores = rois[:, 1]
     if cfg.TEST.HAS_RPN:
         assert len(im_scales) == 1, "Only single-image batch implemented"
-        boxes = rois[:, 1:5] / im_scales[0]
+        boxes = rois[:, 2:6] / im_scales[0]
 
-    return scores,boxes
+    return cls, scores,boxes

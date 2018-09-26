@@ -66,9 +66,6 @@ def proposal_layer(rpn_cls_prob_reshape, rpn_bbox_pred, im_info, cfg_key, _feat_
     # anchor_class shape = [1,h,w,10]， 最大得分的类
     anchor_class = np.argmax(np.reshape(rpn_cls_prob_reshape, [1, height, width, _num_anchors, cfg.NCLASSES]),axis=4)
 
-    print('anchor_max_socres', anchor_max_socres.shape)
-    print('anchor_class', anchor_class.shape)
-
     #提取到object的分数，non-object的我们不关心
     #并reshape到1*H*W*10
 
@@ -128,8 +125,6 @@ def proposal_layer(rpn_cls_prob_reshape, rpn_bbox_pred, im_info, cfg_key, _feat_
     # scores = scores.reshape((-1, 1))
     # scores = scores[keep]
     bbox_deltas=bbox_deltas[keep,:]
-    print('keep',keep.shape,keep)
-    print('proposals', proposals.shape)
 
     # 过滤超过边界的anchor
     anchor_class = anchor_class.reshape((-1, 1))
@@ -138,7 +133,6 @@ def proposal_layer(rpn_cls_prob_reshape, rpn_bbox_pred, im_info, cfg_key, _feat_
     anchor_max_socres = anchor_max_socres[keep]
 
     text_filter = np.where(anchor_class>0)[0]
-    print('text_filter1', len(text_filter))
     anchor_max_socres = anchor_max_socres[text_filter]
     anchor_class = anchor_class[text_filter]
     proposals = proposals[text_filter, :]
