@@ -11,7 +11,7 @@ class TextProposalConnector:
         return graph.sub_graphs_connected()
 
     def fit_y(self, X, Y, x1, x2):
-        len(X)!=0
+        # len(X)!=0
         # if X only include one point, the function will get line y=Y[0]
         if np.sum(X==X[0])==len(X):
             return Y[0], Y[0]

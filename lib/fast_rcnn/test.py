@@ -47,9 +47,7 @@ def test_ctpn(sess, net, im, boxes=None):
 
     if cfg.TEST.HAS_RPN:
         im_blob = blobs['data']
-        blobs['im_info'] = np.array(
-            [[im_blob.shape[1], im_blob.shape[2], im_scales[0]]],
-            dtype=np.float32)
+        blobs['im_info'] = np.array([[im_blob.shape[1], im_blob.shape[2], im_scales[0]]],dtype=np.float32)
     # forward pass
     if cfg.TEST.HAS_RPN:
         feed_dict = {net.data: blobs['data'], net.im_info: blobs['im_info'], net.keep_prob: 1.0}

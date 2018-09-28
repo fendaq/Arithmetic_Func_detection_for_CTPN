@@ -194,7 +194,7 @@ def proposal_layer(rpn_cls_prob_reshape, rpn_bbox_pred, im_info, cfg_key, _feat_
                       anchor_max_socres.astype(np.float32, copy=False),
                       proposals.astype(np.float32, copy=False)))
 
-    return blob,bbox_deltas
+    return blob, bbox_deltas
 
 
 def _filter_boxes(boxes, min_size):
