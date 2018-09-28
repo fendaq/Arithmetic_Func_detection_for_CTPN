@@ -26,5 +26,8 @@ class Graph:
                 while self.graph[v, :].any():
                     v=np.where(self.graph[v, :])[0][0]
                     sub_graphs[-1].append(v)
+            elif not self.graph[:, index].any() and not self.graph[index, :].any():
+                v = index
+                sub_graphs.append([v])
         return sub_graphs
 
