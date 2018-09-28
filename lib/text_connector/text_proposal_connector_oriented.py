@@ -35,7 +35,7 @@ class TextProposalConnector:
             text_line_boxes=text_proposals[list(tp_indices)]#每个文本行的全部小框
             X = (text_line_boxes[:,0] + text_line_boxes[:,2]) / 2# 求每一个小框的中心x，y坐标
             Y = (text_line_boxes[:,1] + text_line_boxes[:,3]) / 2
-            
+
             z1 = np.polyfit(X,Y,1)#多项式拟合，根据之前求的中心店拟合一条直线（最小二乘）
 
             x0=np.min(text_line_boxes[:, 0])#文本行x坐标最小值
@@ -57,11 +57,12 @@ class TextProposalConnector:
             text_lines[index, 4]=score#文本行得分
             text_lines[index, 5]=z1[0]#根据中心点拟合的直线的k，b
             text_lines[index, 6]=z1[1]
-            height = np.mean( (text_line_boxes[:,3]-text_line_boxes[:,1]) )#小框平均高度
+            height = np.mean((text_line_boxes[:,3]-text_line_boxes[:,1]) )#小框平均高度
             text_lines[index, 7]= height + 2.5
 
         text_recs = np.zeros((len(text_lines), 9), np.float)
         index = 0
+
         for line in text_lines:
             b1 = line[6] - line[7] / 2  # 根据高度和文本行中心线，求取文本行上下两条线的b值
             b2 = line[6] + line[7] / 2

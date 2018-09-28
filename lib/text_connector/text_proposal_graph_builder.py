@@ -8,18 +8,28 @@ class TextProposalGraphBuilder:
         Build Text proposals into a graph.
     """
     def get_successions(self, index):
-            box=self.text_proposals[index]
-            results=[]
-            for left in range(int(box[0])+1, min(int(box[0])+TextLineCfg.MAX_HORIZONTAL_GAP+1, self.im_size[1])):
-                adj_box_indices=self.boxes_table[left]
-                for adj_box_index in adj_box_indices:
-                    if self.meet_v_iou(adj_box_index, index):
-                        results.append(adj_box_index)
-                if len(results)!=0:
-                    return results
-            return results
+        """
+        找到index propospal向右方向找距度的proposal离最近且相交具有一定相似
+        :param index:
+        :return:
+        """
+        box=self.text_proposals[index]
+        results=[]
+        for right in range(int(box[0])+1, min(int(box[0])+TextLineCfg.MAX_HORIZONTAL_GAP+1, self.im_size[1])):
+            adj_box_indices=self.boxes_table[right]
+            for adj_box_index in adj_box_indices:
+                if self.meet_v_iou(adj_box_index, index):
+                    results.append(adj_box_index)
+            if len(results)!=0:
+                return results
+        return results
 
     def get_precursors(self, index):
+        """
+        找到index propospal向左方向找距度的proposal离最近且相交具有一定相似
+        :param index:
+        :return:
+        """
         box=self.text_proposals[index]
         results=[]
         for left in range(int(box[0])-1, max(int(box[0]-TextLineCfg.MAX_HORIZONTAL_GAP), 0)-1, -1):
@@ -39,6 +49,7 @@ class TextProposalGraphBuilder:
 
     def meet_v_iou(self, index1, index2):
         def overlaps_v(index1, index2):
+            # 垂直高度相交值，不相交为0，相交最大值为1
             h1=self.heights[index1]
             h2=self.heights[index2]
             y0=max(self.text_proposals[index2][1], self.text_proposals[index1][1])
